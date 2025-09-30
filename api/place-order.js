@@ -5,7 +5,7 @@ export default async (req, res) => {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
-  // Se usan las variables de entorno de Vercel (Service Role Key para seguridad)
+ 
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -14,7 +14,7 @@ export default async (req, res) => {
   }
 
   try {
-    // Inicializar el cliente con la clave de Service Role (Admin Key)
+    
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
     const { orderDetails, products: currentProducts } = req.body;
 
