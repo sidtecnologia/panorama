@@ -16,7 +16,7 @@
 
 const { createClient } = supabase;
 
-// Estas claves se obtendrán de forma segura mediante un API Route
+// Estas variables se inicializan a null/vacio
 let SUPABASE_URL = null;
 let SUPABASE_ANON_KEY = null;
 let supabaseClient = null;
@@ -606,6 +606,7 @@ whatsappBtn.addEventListener('click', async () => {
         orderDetails = {}; 
         // Recargar productos después de un pedido exitoso para actualizar el stock visible
         products = await fetchProductsFromSupabase(); 
+        showDefaultSections(); // Volver a renderizar para ver el stock actualizado
         updateCart(); 
         closeModal(orderSuccessModal);
 
@@ -634,8 +635,8 @@ installCloseBtn && installCloseBtn.addEventListener('click', () => installBanner
 // --- Funciones de Supabase ---
 const fetchProductsFromSupabase = async () => {
     if (!supabaseClient) {
-        console.error('El cliente Supabase no está inicializado. No se pueden cargar los productos.');
-        return [];
+        // Si la función es llamada antes de la inicialización, devuelve vacío.
+        return []; 
     }
     try {
         const { data, error } = await supabaseClient
@@ -656,15 +657,23 @@ const loadConfigAndInitSupabase = async () => {
     try {
         // Obtener URL y Anon Key del Serverless Function
         const response = await fetch('/api/get-config');
+        
         if (!response.ok) {
-            throw new Error(`Fallo al cargar la configuración: ${response.statusText}`);
+            const errorText = await response.text();
+            console.error('Error del API Route /api/get-config:', errorText);
+            throw new Error(`Fallo al cargar la configuración desde Vercel: ${response.status} ${response.statusText}`);
         }
+        
         const config = await response.json();
         
+        if (!config.url || !config.anonKey) {
+             throw new Error("El API Route no retornó las claves de Supabase. Revisa las Variables de Entorno en Vercel.");
+        }
+
         SUPABASE_URL = config.url;
         SUPABASE_ANON_KEY = config.anonKey;
 
-        // Inicializar el cliente Supabase con la Anon Key obtenida
+        // Inicializar el cliente Supabase SOLO si las claves son válidas
         supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         products = await fetchProductsFromSupabase();
@@ -675,7 +684,11 @@ const loadConfigAndInitSupabase = async () => {
         updateCart();
     } catch (error) {
         console.error('Error FATAL al iniciar la aplicación:', error);
-        alert('No se pudo iniciar la aplicación. Error de configuración. Revisa la consola.');
+        // Mostrar un error de inicialización al usuario si falla la carga
+        const loadingMessage = document.createElement('div');
+        loadingMessage.style = 'position:fixed;top:0;left:0;width:100%;height:100%;background:white;display:flex;align-items:center;justify-content:center;color:red;font-weight:bold;text-align:center;padding:20px;z-index:9999;';
+        loadingMessage.textContent = 'ERROR DE INICIALIZACIÓN: No se pudo cargar la configuración de la tienda. Revisa la consola para más detalles (Faltan variables de entorno en Vercel).';
+        document.body.appendChild(loadingMessage);
     }
 };
 
