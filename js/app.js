@@ -212,12 +212,16 @@ const closeModal = () => {
     if(paymentMethodSelect) paymentMethodSelect.value = 'efectivo';
 };
 
-closeBtn.addEventListener('click', closeModal);
-modalOverlay.addEventListener('click', (e) => {
-    if (e.target === modalOverlay) {
-        closeModal();
-    }
-});
+if (closeBtn) {
+    closeBtn.addEventListener('click', closeModal);
+}
+if (modalOverlay) {
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) {
+            closeModal();
+        }
+    });
+}
 
 const openCheckoutModal = () => {
     if (cart.length === 0) {
