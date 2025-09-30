@@ -578,7 +578,8 @@ whatsappBtn.addEventListener('click', async () => {
             .from('orders')
             .insert([{
                 customer_name: orderDetails.name,
-                delivery_address: orderDetails.address,
+                // CORRECCIÓN: Usamos 'customer_address' ya que es el nombre de columna confirmado en la tabla 'orders'
+                customer_address: orderDetails.address, 
                 payment_method: orderDetails.payment,
                 total_amount: orderDetails.total,
                 items_json: JSON.stringify(orderDetails.items), // Guarda el detalle de items como JSON string
@@ -587,14 +588,13 @@ whatsappBtn.addEventListener('click', async () => {
             .select();
 
         if (orderError) {
+            // Este alert se activa si el nombre 'customer_address' tampoco es el correcto en tu BD
             console.error('Error al guardar la orden en Supabase:', orderError);
             alert('Error al guardar la orden en Supabase: ' + orderError.message);
             return;
         }
         
-        // 2. Intentar llamar al API Route (Aunque parezca que no está funcionando, lo mantenemos por si el usuario lo necesita)
-        // Nota: Esta llamada puede estar fallando o no devolviendo JSON. 
-        // Se añade manejo de error para el caso de respuesta no-JSON.
+        // 2. Intentar llamar al API Route
         const response = await fetch('api/place-order', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -609,16 +609,10 @@ whatsappBtn.addEventListener('click', async () => {
         if (!response.ok) {
             const errorText = await response.text();
             console.error('API Route Falló con status:', response.status, 'Respuesta:', errorText);
-            
-            // Si el API Route falla, aún podemos continuar con el WhatsApp ya que ya se guardó en Supabase.
-            // No lanzar un error aquí para no bloquear el flujo de WhatsApp.
-            // Si el API Route necesita actualizar stock, debe ser corregido por el usuario.
         } else {
-             // Solo si la respuesta es OK, intentamos parsear JSON.
              try {
                 result = await response.json();
              } catch (e) {
-                 // Error de parseo: JSON.parse: unexpected character at line 1 column 1
                  console.warn('Advertencia: El API Route devolvió una respuesta OK, pero no era JSON válido:', e.message);
              }
         }
