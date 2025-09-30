@@ -581,7 +581,7 @@ whatsappBtn.addEventListener('click', async () => {
                 customer_address: orderDetails.address, 
                 payment_method: orderDetails.payment,
                 total_amount: orderDetails.total,
-                order_items: JSON.stringify(orderDetails.items), 
+                order_items: orderDetails.items,
                 order_status: 'Pendiente',
             }])
             .select();
