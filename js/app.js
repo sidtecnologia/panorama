@@ -262,7 +262,7 @@ const generateCategoryCarousel = () => {
     const categories = Array.from(new Set(products.map(p => p.category))).map(c => ({ label: c }));
     const allItem = document.createElement('div');
     allItem.className = 'category-item';
-    const allIconPath = 'img/icons/all.webp'; // Asegura que esta ruta sea correcta
+    const allIconPath = 'img/icons/all.webp';
     allItem.innerHTML = `<img class="category-image" src="${allIconPath}" alt="Todo" data-category="__all"><span class="category-name">Todo</span>`;
     categoryCarousel.appendChild(allItem);
     categories.forEach(c => {
@@ -472,7 +472,7 @@ function addToCart(id, qty = 1) {
     const currentQtyInCart = existingInCart ? existingInCart.qty : 0;
     
     if (currentQtyInCart + qty > availableStock) {
-        alert(`No hay suficiente stock para ${p.name}. Solo quedan ${availableStock} unidades.`);
+        alert(`En el momento solo quedan ${availableStock} unidades.`);
         return;
     }
 
@@ -501,7 +501,7 @@ cartItemsContainer.addEventListener('click', (e) => {
 
     if (op === 'inc') {
         if ((productInCart.qty + 1) > (originalProduct.stock || 0)) {
-            alert(`No hay suficiente stock para ${productInCart.name}. Solo quedan ${originalProduct.stock} unidades.`);
+            alert(`En el momento solo quedan ${originalProduct.stock} unidades.`);
             return;
         }
         productInCart.qty++;
@@ -532,7 +532,7 @@ finalizeBtn.addEventListener('click', () => {
     const payment = document.querySelector('input[name="payment"]:checked')?.value || '';
     
     if (!termsConsentCheckbox.checked) {
-        alert('Debes aceptar los Términos y Condiciones y la Política de Privacidad para continuar.');
+        alert('Debes aceptar los Términos y Condiciones y la Política de Datos para continuar.');
         return;
     }
 
@@ -568,12 +568,12 @@ whatsappBtn.addEventListener('click', async () => {
     }
 
     if (!supabaseClient) {
-        alert('El cliente Supabase no está inicializado. Inténtalo de nuevo.');
+        alert('El cliente no está inicializado. Inténtalo de nuevo.');
         return;
     }
 
     try {
-        // 1. Guardar la orden en Supabase (tabla 'orders')
+        // 1. Guardar la orden en DB (tabla 'orders')
         const { data: orderData, error: orderError } = await supabaseClient
             .from('orders')
             .insert([{
@@ -587,9 +587,9 @@ whatsappBtn.addEventListener('click', async () => {
             .select();
 
         if (orderError) {
-            // Este alert se activa si el nombre 'customer_address' tampoco es el correcto en tu BD
-            console.error('Error al guardar la orden en Supabase:', orderError);
-            alert('Error al guardar la orden en Supabase: ' + orderError.message);
+           
+            console.error('Error al guardar la orden en DB:', orderError);
+            alert('Error al guardar la orden en DB: ' + orderError.message);
             return;
         }
         
@@ -636,7 +636,7 @@ whatsappBtn.addEventListener('click', async () => {
         closeModal(orderSuccessModal);
 
     } catch (error) {
-        // Captura errores generales (ej. de Supabase o de fetch)
+        
         alert('Error al procesar el pedido: ' + error.message);
         console.error('Fallo en el pedido:', error);
     }
@@ -658,7 +658,7 @@ installPromptBtn && installPromptBtn.addEventListener('click', async () => {
 
 installCloseBtn && installCloseBtn.addEventListener('click', () => installBanner.classList.remove('visible'));
 
-// --- Funciones de Supabase ---
+// --- Funciones de DB ---
 const fetchProductsFromSupabase = async () => {
     if (!supabaseClient) {
         
@@ -681,19 +681,19 @@ const fetchProductsFromSupabase = async () => {
 
 const loadConfigAndInitSupabase = async () => {
     try {
-        // Obtener URL y Anon Key del Serverless Function
+        
         const response = await fetch('api/get-config');
         
         if (!response.ok) {
             const errorText = await response.text();
             console.error('Error del API Route api/get-config:', errorText);
-            throw new Error(`Fallo al cargar la configuración desde Vercel: ${response.status} ${response.statusText}`);
+            throw new Error(`Fallo al cargar la configuración desde V: ${response.status} ${response.statusText}`);
         }
         
         const config = await response.json();
         
         if (!config.url || !config.anonKey) {
-             throw new Error("El API Route no retornó las claves de Supabase. Revisa las Variables de Entorno en Vercel.");
+             throw new Error("El API Route no retornó las claves de DB. Revisa las Variables de Entorno en Vercel.");
         }
 
         SUPABASE_URL = config.url;
