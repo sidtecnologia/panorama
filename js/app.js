@@ -23,34 +23,33 @@ let products = [];
 let currentImageIndex = 0;
 let supabaseClient = null;
 
-// Referencias a elementos del DOM (Declaradas globalmente, asignadas en DOMContentLoaded)
-let cartItemsContainer = null;
-let cartTotalElement = null;
-let productGrid = null;
-let categoryCarousel = null;
-let sectionTitles = null;
-let mainContent = null;
-let searchInput = null;
-let whatsappBtn = null;
-let modalOverlay = null;
-let closeBtn = null;
-let installBanner = null;
-let installPromptBtn = null;
-let installCloseBtn = null;
+// Referencias a elementos del DOM
+const cartItemsContainer = document.getElementById('cart-items');
+const cartTotalElement = document.getElementById('cart-total');
+const productGrid = document.getElementById('product-grid');
+const categoryCarousel = document.getElementById('category-carousel');
+const sectionTitles = document.getElementById('section-titles');
+const mainContent = document.getElementById('main-content');
+const searchInput = document.getElementById('search-input');
+const whatsappBtn = document.getElementById('whatsapp-btn');
+const modalOverlay = document.getElementById('modal-overlay');
+const closeBtn = document.getElementById('close-btn');
+const installBanner = document.getElementById('install-banner');
+const installPromptBtn = document.getElementById('install-prompt-btn');
+const installCloseBtn = document.getElementById('install-close-btn');
 let deferredPrompt;
 
-// Elementos del modal de pago (Checkout) - No se asignan aquí, se buscan en openCheckoutModal/processOrder
-let clientNameInput = null;
-let clientPhoneInput = null;
-let clientAddressInput = null;
-let paymentMethodSelect = null;
+// Elementos del modal de pago (Checkout)
+const confirmOrderBtn = document.getElementById('confirm-order-btn');
+const clientNameInput = document.getElementById('client-name');
+const clientPhoneInput = document.getElementById('client-phone');
+const clientAddressInput = document.getElementById('client-address');
+const paymentMethodSelect = document.getElementById('payment-method');
 
 
 // --- Lógica del Carrito ---
 
 const updateCart = () => {
-    if (!cartItemsContainer || !cartTotalElement || !whatsappBtn) return; // Validación de inicialización
-
     cartItemsContainer.innerHTML = '';
     let total = 0;
 
@@ -133,7 +132,6 @@ const getCartSummary = () => {
 
 const showNotification = (message) => {
     const notification = document.getElementById('notification');
-    if (!notification) return; 
     notification.textContent = message;
     notification.classList.add('show');
     setTimeout(() => {
@@ -160,16 +158,10 @@ const generateProductCard = (product) => {
 };
 
 const renderProducts = (filteredProducts) => {
-    if (!productGrid) {
-        console.error('Error: productGrid no está inicializado en renderProducts.');
-        return;
-    }
     productGrid.innerHTML = filteredProducts.map(generateProductCard).join('');
 };
 
 const generateCategoryCarousel = () => {
-    if (!categoryCarousel) return; // Validación de inicialización
-
     const categories = [...new Set(products.map(p => p.category))].sort();
 
     categoryCarousel.innerHTML = categories.map(category => `
@@ -182,39 +174,50 @@ const generateCategoryCarousel = () => {
 const filterByCategory = (category) => {
     const filtered = products.filter(p => p.category === category);
     renderProducts(filtered);
-    if (sectionTitles) {
-        sectionTitles.textContent = category;
-    }
-    if (searchInput) {
-        searchInput.value = '';
-    }
+    sectionTitles.textContent = category;
+    searchInput.value = '';
 };
 
 const showDefaultSections = () => {
     renderProducts(products); // Mostrar todos por defecto
-    if (sectionTitles) {
-        sectionTitles.textContent = 'Todos los Productos';
-    }
+    sectionTitles.textContent = 'Todos los Productos';
 };
+
+// --- Manejo de Búsqueda ---
+
+searchInput.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase();
+    if (query.length < 2) {
+        showDefaultSections();
+        return;
+    }
+    const filtered = products.filter(p => p.name.toLowerCase().includes(query) || p.category.toLowerCase().includes(query));
+    renderProducts(filtered);
+    sectionTitles.textContent = `Resultados para "${e.target.value}"`;
+});
 
 // --- Manejo de Modales y Pedido ---
 
 const showModal = (contentHTML) => {
-    const modalWrapper = document.getElementById('modal-content-wrapper');
-    if (!modalWrapper || !modalOverlay) return; // Validación
-
-    modalWrapper.innerHTML = contentHTML;
+    document.getElementById('modal-content-wrapper').innerHTML = contentHTML;
     modalOverlay.classList.remove('hidden');
 };
 
 const closeModal = () => {
-    if (!modalOverlay) return; // Validación
-
     modalOverlay.classList.add('hidden');
     // Limpiar campos del formulario si están presentes
-    // NOTA: Estos inputs existen solo dentro del modal, se limpian por el DOM al cerrar
+    if(clientNameInput) clientNameInput.value = '';
+    if(clientPhoneInput) clientPhoneInput.value = '';
+    if(clientAddressInput) clientAddressInput.value = '';
+    if(paymentMethodSelect) paymentMethodSelect.value = 'efectivo';
 };
 
+closeBtn.addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) {
+        closeModal();
+    }
+});
 
 const openCheckoutModal = () => {
     if (cart.length === 0) {
@@ -248,26 +251,17 @@ const openCheckoutModal = () => {
     showModal(checkoutHTML);
 };
 
+// Evento para abrir el modal de Checkout
+whatsappBtn.addEventListener('click', openCheckoutModal);
+
 // --- Función clave: Procesamiento de Orden (Llama al API Route) ---
 const processOrder = async () => {
-    // Las referencias a los inputs se toman aquí ya que se crean dinámicamente en el modal
-    const nameInput = document.getElementById('client-name');
-    const phoneInput = document.getElementById('client-phone');
-    const addressInput = document.getElementById('client-address');
-    const paymentSelect = document.getElementById('payment-method');
-    const btn = document.getElementById('confirm-order-btn');
-
-    if (!nameInput || !phoneInput || !addressInput || !paymentSelect || !btn || !cartTotalElement) {
-        showNotification('Error interno: Faltan elementos de la orden. Intente de nuevo.');
-        console.error('Missing DOM elements for order processing');
-        return;
-    }
-    
-    const name = nameInput.value.trim();
-    const phone = phoneInput.value.trim();
-    const address = addressInput.value.trim();
-    const paymentMethod = paymentSelect.value;
+    const name = document.getElementById('client-name').value.trim();
+    const phone = document.getElementById('client-phone').value.trim();
+    const address = document.getElementById('client-address').value.trim();
+    const paymentMethod = document.getElementById('payment-method').value;
     const total = parseFloat(cartTotalElement.textContent);
+    const btn = document.getElementById('confirm-order-btn');
 
     if (!name || !phone || !address) {
         showNotification('Por favor, completa todos tus datos de contacto y envío.');
@@ -333,6 +327,14 @@ const processOrder = async () => {
 };
 
 
+// Event listener para el botón de confirmar pago (DEBE estar dentro del DOMContentLoaded o ser asignado dinámicamente)
+document.addEventListener('click', (e) => {
+    if (e.target && e.target.id === 'confirm-order-btn') {
+        processOrder();
+    }
+});
+
+
 // --- Lógica de Inicialización de Supabase (Ocultar Credenciales) ---
 
 const validateSupabaseUrl = (url) => {
@@ -359,8 +361,9 @@ const loadConfigAndInitSupabase = async () => {
     } catch (error) {
         // Manejo de error crítico
         console.error('Error FATAL al iniciar la aplicación:', error.message);
-        if (mainContent) {
-            mainContent.innerHTML = `<div class="p-8 bg-red-100 border border-red-400 text-red-700 rounded-lg mx-4 mt-8 text-center">
+        const main = document.getElementById('main-content');
+        if (main) {
+            main.innerHTML = `<div class="p-8 bg-red-100 border border-red-400 text-red-700 rounded-lg mx-4 mt-8 text-center">
                 <h1 class="text-2xl font-bold mb-2">Error de Configuración</h1>
                 <p>No se pudo cargar la configuración de la base de datos.</p>
                 <p class="mt-2">Detalle: ${error.message}</p>
@@ -382,6 +385,7 @@ const fetchProductsFromSupabase = async () => {
         return data;
     } catch (err) {
         console.error('Error al cargar los productos:', err.message);
+        // Usamos una notificación en lugar de alert
         showNotification('Hubo un error al cargar los productos. Revisa la consola para más detalles.');
         return [];
     }
@@ -389,76 +393,18 @@ const fetchProductsFromSupabase = async () => {
 
 // --- Iniciar la aplicación después de cargar los datos ---
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Asignar referencias del DOM (ESTA ES LA CLAVE)
-    // Nos aseguramos de que todos los elementos existan antes de que se usen en el resto de las funciones.
-    cartItemsContainer = document.getElementById('cart-items');
-    cartTotalElement = document.getElementById('cart-total');
-    productGrid = document.getElementById('product-grid');
-    categoryCarousel = document.getElementById('category-carousel');
-    sectionTitles = document.getElementById('section-titles');
-    mainContent = document.getElementById('main-content');
-    searchInput = document.getElementById('search-input');
-    whatsappBtn = document.getElementById('whatsapp-btn');
-    modalOverlay = document.getElementById('modal-overlay');
-    closeBtn = document.getElementById('close-btn');
-    installBanner = document.getElementById('install-banner');
-    installPromptBtn = document.getElementById('install-prompt-btn');
-    installCloseBtn = document.getElementById('install-close-btn');
-
-    // 2. Adjuntar Listeners del DOM
-    if (closeBtn) {
-        closeBtn.addEventListener('click', closeModal);
-    }
-    if (modalOverlay) {
-        modalOverlay.addEventListener('click', (e) => {
-            if (e.target === modalOverlay) {
-                closeModal();
-            }
-        });
-    }
-
-    // Evento para abrir el modal de Checkout
-    if (whatsappBtn) {
-        whatsappBtn.addEventListener('click', openCheckoutModal);
-    }
-
-    // Event listener para el botón de confirmar pago (Manejado por delegación)
-    document.addEventListener('click', (e) => {
-        if (e.target && e.target.id === 'confirm-order-btn') {
-            processOrder();
-        }
-    });
-
-    // Event listener para la búsqueda
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase();
-            if (query.length < 2) {
-                showDefaultSections();
-                return;
-            }
-            const filtered = products.filter(p => p.name.toLowerCase().includes(query) || p.category.toLowerCase().includes(query));
-            renderProducts(filtered);
-            sectionTitles.textContent = `Resultados para "${e.target.value}"`;
-        });
-    }
-
-
-    // 3. Inicializar la Aplicación (Auth/Config/Data)
     const isConfigLoaded = await loadConfigAndInitSupabase();
     
     if (isConfigLoaded) {
         products = await fetchProductsFromSupabase();
-        
-        // SOLO si tenemos productos y todos los elementos del DOM están inicializados, pintamos la UI principal
-        if (products.length > 0 && productGrid && categoryCarousel && sectionTitles) {
+        if (products.length > 0) {
             showDefaultSections();
             generateCategoryCarousel();
         }
     }
     updateCart();
 
-    // 4. Lógica para PWA (instalación)
+    // Lógica para PWA (instalación)
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
