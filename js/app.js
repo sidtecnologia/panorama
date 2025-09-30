@@ -2,10 +2,10 @@
  * @license
  * Copyright © 2025 Tecnología y Soluciones Informáticas. Todos los derechos reservados.
  *
- * AUTOSERVICIO LA QUINTA PWA
+ * SUPERMERCADO PANORAMA PWA
  *
  * Este software es propiedad confidencial y exclusiva de TECSIN.
- * El permiso de uso de este software es temporal para pruebas en Autoservicio La Quinta.
+ * El permiso de uso de este software es temporal para pruebas en Supermercados Panorama.
  *
  * Queda estrictamente prohibida la copia, modificación, distribución,
  * ingeniería inversa o cualquier otro uso no autorizado de este código
@@ -16,9 +16,10 @@
 
 const { createClient } = supabase;
 
-const SUPABASE_URL = 'https://nqjekbyyvqrevbcehhob.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xamVrYnl5dnFyZXZiY2VoaG9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0MzE4MTEsImV4cCI6MjA3NDAwNzgxMX0.U-zb7wcX3qYeAoRH3MM2FVj9ZZzODsdvjj9wNWg_h74';
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Estas claves se obtendrán de forma segura mediante un API Route
+let SUPABASE_URL = null;
+let SUPABASE_ANON_KEY = null;
+let supabaseClient = null;
 
 // --- Variables de estado ---
 let cart = [];
@@ -66,7 +67,6 @@ const orderSuccessModal = document.getElementById('orderSuccessModal');
 const orderSuccessTotal = document.getElementById('order-success-total');
 const whatsappBtn = document.getElementById('whatsapp-btn');
 const closeSuccessBtn = document.getElementById('close-success-btn');
-// NUEVO: Referencia al checkbox de consentimiento
 const termsConsentCheckbox = document.getElementById('terms-consent-checkbox');
 
 
@@ -263,7 +263,8 @@ const generateCategoryCarousel = () => {
     const categories = Array.from(new Set(products.map(p => p.category))).map(c => ({ label: c }));
     const allItem = document.createElement('div');
     allItem.className = 'category-item';
-    allItem.innerHTML = `<img class="category-image" src="img/icons/all.webp" alt="Todo" data-category="__all"><span class="category-name">Todo</span>`;
+    const allIconPath = 'img/icons/all.webp'; // Asegura que esta ruta sea correcta
+    allItem.innerHTML = `<img class="category-image" src="${allIconPath}" alt="Todo" data-category="__all"><span class="category-name">Todo</span>`;
     categoryCarousel.appendChild(allItem);
     categories.forEach(c => {
         const el = document.createElement('div');
@@ -526,14 +527,11 @@ checkoutBtn.addEventListener('click', () => {
     showModal(checkoutModal);
 });
 
-// MODIFICADO: Este botón ahora solo prepara los datos y muestra el modal de éxito.
-// Las operaciones de la base de datos se movieron a la función del botón de WhatsApp.
 finalizeBtn.addEventListener('click', () => {
     const name = customerNameInput.value.trim();
     const address = customerAddressInput.value.trim();
     const payment = document.querySelector('input[name="payment"]:checked')?.value || '';
     
-    // Verificación del consentimiento antes de continuar
     if (!termsConsentCheckbox.checked) {
         alert('Debes aceptar los Términos y Condiciones y la Política de Privacidad para continuar.');
         return;
@@ -544,7 +542,6 @@ finalizeBtn.addEventListener('click', () => {
         return;
     }
 
-    // Guardar los detalles para el mensaje de WhatsApp y la confirmación
     orderDetails = {
         name,
         address,
@@ -565,51 +562,37 @@ function showOrderSuccessModal() {
     showModal(orderSuccessModal);
 }
 
-// MODIFICADO: Este botón ahora se encarga de las operaciones de la base de datos
-// antes de redirigir a WhatsApp.
 whatsappBtn.addEventListener('click', async () => {
     if (Object.keys(orderDetails).length === 0) {
         alert('No hay detalles del pedido para enviar.');
         return;
     }
 
+    if (!supabaseClient) {
+        alert('El cliente Supabase no está inicializado. Inténtalo de nuevo.');
+        return;
+    }
+
     try {
-        // 1. Verificar y actualizar stock
-        const updates = orderDetails.items.map(item => {
-            const product = products.find(p => p.id === item.id);
-            if (!product || product.stock < item.qty) {
-                throw new Error(`No hay suficiente stock para ${item.name}. Stock disponible: ${product.stock}`);
-            }
-            const newStock = product.stock - item.qty;
-            return supabaseClient
-                .from('products')
-                .update({ stock: newStock })
-                .eq('id', item.id);
+        // Enviar la orden completa a la función Serverless de Vercel (api/place-order)
+        // para que maneje la transacción de forma segura con la Service Role Key.
+        const response = await fetch('/api/place-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                orderDetails,
+                // Pasar la lista actual de productos para validación de stock en el servidor
+                products 
+            })
         });
 
-        // Esperar a que todas las actualizaciones de stock se completen
-        const results = await Promise.all(updates);
-        results.forEach(result => {
-            if (result.error) {
-                throw new Error('Error al actualizar el stock: ' + result.error.message);
-            }
-        });
+        const result = await response.json();
 
-        // 2. Guardar el pedido en la base de datos
-        const orderData = {
-            customer_name: orderDetails.name,
-            customer_address: orderDetails.address,
-            payment_method: orderDetails.payment,
-            total_amount: orderDetails.total,
-            order_items: orderDetails.items,
-            order_status: 'Pendiente'
-        };
-        const { error: orderError } = await supabaseClient.from('orders').insert([orderData]);
-        if (orderError) {
-            throw new Error('Error al guardar el pedido: ' + orderError.message);
+        if (!response.ok) {
+            throw new Error(result.error || 'Error desconocido al procesar la orden en el servidor.');
         }
 
-        // Si todo es exitoso, generar el enlace de WhatsApp y limpiar el carrito
+        // Si la orden fue exitosa en el servidor
         const whatsappNumber = '573227671829';
         let message = `Hola mi nombre es ${encodeURIComponent(orderDetails.name)}.%0AHe realizado un pedido para la dirección ${encodeURIComponent(orderDetails.address)} quiero confirmar el pago en ${encodeURIComponent(orderDetails.payment)}.%0A%0A--- Mi pedido es: ---%0A`;
         orderDetails.items.forEach(item => {
@@ -619,9 +602,10 @@ whatsappBtn.addEventListener('click', async () => {
         const link = `https://wa.me/${whatsappNumber}?text=${message}`;
         window.open(link, '_blank');
         
-        // Limpiar carrito y detalles del pedido después de enviar
         cart = []; 
         orderDetails = {}; 
+        // Recargar productos después de un pedido exitoso para actualizar el stock visible
+        products = await fetchProductsFromSupabase(); 
         updateCart(); 
         closeModal(orderSuccessModal);
 
@@ -647,8 +631,12 @@ installPromptBtn && installPromptBtn.addEventListener('click', async () => {
 
 installCloseBtn && installCloseBtn.addEventListener('click', () => installBanner.classList.remove('visible'));
 
-// --- Nueva función para obtener los datos de la API ---
+// --- Funciones de Supabase ---
 const fetchProductsFromSupabase = async () => {
+    if (!supabaseClient) {
+        console.error('El cliente Supabase no está inicializado. No se pueden cargar los productos.');
+        return [];
+    }
     try {
         const { data, error } = await supabaseClient
             .from('products')
@@ -664,12 +652,32 @@ const fetchProductsFromSupabase = async () => {
     }
 };
 
-// --- Iniciar la aplicación después de cargar los datos ---
-document.addEventListener('DOMContentLoaded', async () => {
-    products = await fetchProductsFromSupabase();
-    if (products.length > 0) {
-        showDefaultSections();
-        generateCategoryCarousel();
+const loadConfigAndInitSupabase = async () => {
+    try {
+        // Obtener URL y Anon Key del Serverless Function
+        const response = await fetch('/api/get-config');
+        if (!response.ok) {
+            throw new Error(`Fallo al cargar la configuración: ${response.statusText}`);
+        }
+        const config = await response.json();
+        
+        SUPABASE_URL = config.url;
+        SUPABASE_ANON_KEY = config.anonKey;
+
+        // Inicializar el cliente Supabase con la Anon Key obtenida
+        supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        products = await fetchProductsFromSupabase();
+        if (products.length > 0) {
+            showDefaultSections();
+            generateCategoryCarousel();
+        }
+        updateCart();
+    } catch (error) {
+        console.error('Error FATAL al iniciar la aplicación:', error);
+        alert('No se pudo iniciar la aplicación. Error de configuración. Revisa la consola.');
     }
-    updateCart();
-});
+};
+
+// --- Iniciar la aplicación después de cargar los datos ---
+document.addEventListener('DOMContentLoaded', loadConfigAndInitSupabase);
