@@ -576,7 +576,7 @@ whatsappBtn.addEventListener('click', async () => {
     try {
         // Enviar la orden completa a la función Serverless de Vercel (api/place-order)
         // para que maneje la transacción de forma segura con la Service Role Key.
-        const response = await fetch('/api/place-order', {
+        const response = await fetch('api/place-order', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -656,11 +656,11 @@ const fetchProductsFromSupabase = async () => {
 const loadConfigAndInitSupabase = async () => {
     try {
         // Obtener URL y Anon Key del Serverless Function
-        const response = await fetch('/api/get-config');
+        const response = await fetch('api/get-config');
         
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('Error del API Route /api/get-config:', errorText);
+            console.error('Error del API Route api/get-config:', errorText);
             throw new Error(`Fallo al cargar la configuración desde Vercel: ${response.status} ${response.statusText}`);
         }
         
