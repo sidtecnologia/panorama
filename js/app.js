@@ -23,7 +23,7 @@ let products = [];
 let currentImageIndex = 0;
 let supabaseClient = null;
 
-// Referencias a elementos del DOM (Inicializadas a null, se asignan en DOMContentLoaded)
+// Referencias a elementos del DOM (Declaradas globalmente, asignadas en DOMContentLoaded)
 let cartItemsContainer = null;
 let cartTotalElement = null;
 let productGrid = null;
@@ -39,8 +39,7 @@ let installPromptBtn = null;
 let installCloseBtn = null;
 let deferredPrompt;
 
-// Elementos del modal de pago (Checkout)
-let confirmOrderBtn = null;
+// Elementos del modal de pago (Checkout) - No se asignan aquí, se buscan en openCheckoutModal/processOrder
 let clientNameInput = null;
 let clientPhoneInput = null;
 let clientAddressInput = null;
@@ -50,6 +49,8 @@ let paymentMethodSelect = null;
 // --- Lógica del Carrito ---
 
 const updateCart = () => {
+    if (!cartItemsContainer || !cartTotalElement || !whatsappBtn) return; // Validación de inicialización
+
     cartItemsContainer.innerHTML = '';
     let total = 0;
 
@@ -132,6 +133,7 @@ const getCartSummary = () => {
 
 const showNotification = (message) => {
     const notification = document.getElementById('notification');
+    if (!notification) return; 
     notification.textContent = message;
     notification.classList.add('show');
     setTimeout(() => {
@@ -158,15 +160,16 @@ const generateProductCard = (product) => {
 };
 
 const renderProducts = (filteredProducts) => {
-    // Verificamos si productGrid ya fue asignado en DOMContentLoaded
     if (!productGrid) {
-        console.error('Error: productGrid no está inicializado.');
+        console.error('Error: productGrid no está inicializado en renderProducts.');
         return;
     }
     productGrid.innerHTML = filteredProducts.map(generateProductCard).join('');
 };
 
 const generateCategoryCarousel = () => {
+    if (!categoryCarousel) return; // Validación de inicialización
+
     const categories = [...new Set(products.map(p => p.category))].sort();
 
     categoryCarousel.innerHTML = categories.map(category => `
@@ -179,32 +182,37 @@ const generateCategoryCarousel = () => {
 const filterByCategory = (category) => {
     const filtered = products.filter(p => p.category === category);
     renderProducts(filtered);
-    sectionTitles.textContent = category;
-    searchInput.value = '';
+    if (sectionTitles) {
+        sectionTitles.textContent = category;
+    }
+    if (searchInput) {
+        searchInput.value = '';
+    }
 };
 
 const showDefaultSections = () => {
     renderProducts(products); // Mostrar todos por defecto
-    sectionTitles.textContent = 'Todos los Productos';
+    if (sectionTitles) {
+        sectionTitles.textContent = 'Todos los Productos';
+    }
 };
-
-// --- Manejo de Búsqueda ---
-// El listener se añade dentro de DOMContentLoaded
 
 // --- Manejo de Modales y Pedido ---
 
 const showModal = (contentHTML) => {
-    document.getElementById('modal-content-wrapper').innerHTML = contentHTML;
+    const modalWrapper = document.getElementById('modal-content-wrapper');
+    if (!modalWrapper || !modalOverlay) return; // Validación
+
+    modalWrapper.innerHTML = contentHTML;
     modalOverlay.classList.remove('hidden');
 };
 
 const closeModal = () => {
+    if (!modalOverlay) return; // Validación
+
     modalOverlay.classList.add('hidden');
     // Limpiar campos del formulario si están presentes
-    if(clientNameInput) clientNameInput.value = '';
-    if(clientPhoneInput) clientPhoneInput.value = '';
-    if(clientAddressInput) clientAddressInput.value = '';
-    if(paymentMethodSelect) paymentMethodSelect.value = 'efectivo';
+    // NOTA: Estos inputs existen solo dentro del modal, se limpian por el DOM al cerrar
 };
 
 
@@ -243,12 +251,23 @@ const openCheckoutModal = () => {
 // --- Función clave: Procesamiento de Orden (Llama al API Route) ---
 const processOrder = async () => {
     // Las referencias a los inputs se toman aquí ya que se crean dinámicamente en el modal
-    const name = document.getElementById('client-name').value.trim();
-    const phone = document.getElementById('client-phone').value.trim();
-    const address = document.getElementById('client-address').value.trim();
-    const paymentMethod = document.getElementById('payment-method').value;
-    const total = parseFloat(cartTotalElement.textContent);
+    const nameInput = document.getElementById('client-name');
+    const phoneInput = document.getElementById('client-phone');
+    const addressInput = document.getElementById('client-address');
+    const paymentSelect = document.getElementById('payment-method');
     const btn = document.getElementById('confirm-order-btn');
+
+    if (!nameInput || !phoneInput || !addressInput || !paymentSelect || !btn || !cartTotalElement) {
+        showNotification('Error interno: Faltan elementos de la orden. Intente de nuevo.');
+        console.error('Missing DOM elements for order processing');
+        return;
+    }
+    
+    const name = nameInput.value.trim();
+    const phone = phoneInput.value.trim();
+    const address = addressInput.value.trim();
+    const paymentMethod = paymentSelect.value;
+    const total = parseFloat(cartTotalElement.textContent);
 
     if (!name || !phone || !address) {
         showNotification('Por favor, completa todos tus datos de contacto y envío.');
@@ -363,7 +382,6 @@ const fetchProductsFromSupabase = async () => {
         return data;
     } catch (err) {
         console.error('Error al cargar los productos:', err.message);
-        // Usamos una notificación en lugar de alert
         showNotification('Hubo un error al cargar los productos. Revisa la consola para más detalles.');
         return [];
     }
@@ -371,7 +389,8 @@ const fetchProductsFromSupabase = async () => {
 
 // --- Iniciar la aplicación después de cargar los datos ---
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Asignar referencias del DOM
+    // 1. Asignar referencias del DOM (ESTA ES LA CLAVE)
+    // Nos aseguramos de que todos los elementos existan antes de que se usen en el resto de las funciones.
     cartItemsContainer = document.getElementById('cart-items');
     cartTotalElement = document.getElementById('cart-total');
     productGrid = document.getElementById('product-grid');
@@ -403,7 +422,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         whatsappBtn.addEventListener('click', openCheckoutModal);
     }
 
-    // Event listener para el botón de confirmar pago (DEBE ser manejado por delegación ya que el botón se crea dinámicamente)
+    // Event listener para el botón de confirmar pago (Manejado por delegación)
     document.addEventListener('click', (e) => {
         if (e.target && e.target.id === 'confirm-order-btn') {
             processOrder();
@@ -430,7 +449,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     if (isConfigLoaded) {
         products = await fetchProductsFromSupabase();
-        if (products.length > 0) {
+        
+        // SOLO si tenemos productos y todos los elementos del DOM están inicializados, pintamos la UI principal
+        if (products.length > 0 && productGrid && categoryCarousel && sectionTitles) {
             showDefaultSections();
             generateCategoryCarousel();
         }
