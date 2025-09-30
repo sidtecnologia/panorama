@@ -578,12 +578,11 @@ whatsappBtn.addEventListener('click', async () => {
             .from('orders')
             .insert([{
                 customer_name: orderDetails.name,
-                // CORRECCIÓN: Usamos 'customer_address' ya que es el nombre de columna confirmado en la tabla 'orders'
                 customer_address: orderDetails.address, 
                 payment_method: orderDetails.payment,
                 total_amount: orderDetails.total,
-                items_json: JSON.stringify(orderDetails.items), // Guarda el detalle de items como JSON string
-                status: 'Pendiente de pago' 
+                order_items: JSON.stringify(orderDetails.items), 
+                order_status: 'Pendiente',
             }])
             .select();
 
