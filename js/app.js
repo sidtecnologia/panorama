@@ -67,11 +67,11 @@ const orderSuccessTotal = document.getElementById('order-success-total');
 const whatsappBtn = document.getElementById('whatsapp-btn');
 const closeSuccessBtn = document.getElementById('close-success-btn');
 const termsConsentCheckbox = document.getElementById('terms-consent-checkbox');
-
+const clearSearchBtn = document.getElementById('clear-search');
 
 // --- Funciones de Ayuda ---
 const money = (v) => {
-    const value = Math.floor(v);
+    const value = Math.floor(v || 0);
     return value.toLocaleString('es-CO');
 };
 
@@ -90,87 +90,90 @@ if (bannerCarousel) {
     const slides = document.querySelectorAll('.banner-slide');
     let currentBanner = 0;
     let bannerInterval;
-    const firstSlideClone = slides[0].cloneNode(true);
-    const lastSlideClone = slides[slides.length - 1].cloneNode(true);
-    bannerCarousel.appendChild(firstSlideClone);
-    bannerCarousel.insertBefore(lastSlideClone, slides[0]);
-    currentBanner = 1;
-    bannerCarousel.style.transform = `translateX(-${currentBanner * 100}%)`;
-    slides.forEach((_, idx) => {
-        const dot = document.createElement('div');
-        dot.classList.add('banner-dot');
-        if (idx === 0) dot.classList.add('active');
-        dot.addEventListener('click', () => goToSlide(idx + 1));
-        bannerDots.appendChild(dot);
-    });
-
-    function updateBanner() {
+    // clones for infinite feel (if no slides, guard)
+    if (slides.length > 0) {
+        const firstSlideClone = slides[0].cloneNode(true);
+        const lastSlideClone = slides[slides.length - 1].cloneNode(true);
+        bannerCarousel.appendChild(firstSlideClone);
+        bannerCarousel.insertBefore(lastSlideClone, slides[0]);
+        currentBanner = 1;
         bannerCarousel.style.transform = `translateX(-${currentBanner * 100}%)`;
-        const dotIndex = (currentBanner - 1 + slides.length) % slides.length;
-        document.querySelectorAll('.banner-dot').forEach((dot, idx) => {
-            dot.classList.toggle('active', idx === dotIndex);
+        slides.forEach((_, idx) => {
+            const dot = document.createElement('div');
+            dot.classList.add('banner-dot');
+            if (idx === 0) dot.classList.add('active');
+            dot.addEventListener('click', () => goToSlide(idx + 1));
+            bannerDots.appendChild(dot);
         });
-    }
 
-    function goToSlide(idx) {
-        currentBanner = idx;
-        updateBanner();
-        resetInterval();
-    }
+        function updateBanner() {
+            bannerCarousel.style.transform = `translateX(-${currentBanner * 100}%)`;
+            const dotIndex = (currentBanner - 1 + slides.length) % slides.length;
+            document.querySelectorAll('.banner-dot').forEach((dot, idx) => {
+                dot.classList.toggle('active', idx === dotIndex);
+            });
+        }
 
-    function nextBanner() {
-        currentBanner++;
-        updateBanner();
-        if (currentBanner >= slides.length + 1) {
-            setTimeout(() => {
-                bannerCarousel.style.transition = 'none';
-                currentBanner = 1;
-                bannerCarousel.style.transform = `translateX(-${currentBanner * 100}%)`;
+        function goToSlide(idx) {
+            currentBanner = idx;
+            updateBanner();
+            resetInterval();
+        }
+
+        function nextBanner() {
+            currentBanner++;
+            updateBanner();
+            if (currentBanner >= slides.length + 1) {
                 setTimeout(() => {
-                    bannerCarousel.style.transition = 'transform 0.5s ease';
-                }, 50);
-            }, 500);
+                    bannerCarousel.style.transition = 'none';
+                    currentBanner = 1;
+                    bannerCarousel.style.transform = `translateX(-${currentBanner * 100}%)`;
+                    setTimeout(() => {
+                        bannerCarousel.style.transition = 'transform 0.5s ease';
+                    }, 50);
+                }, 500);
+            }
         }
-    }
 
-    function resetInterval() {
-        clearInterval(bannerInterval);
-        bannerInterval = setInterval(nextBanner, 4000);
-    }
-    let startX = 0;
-    bannerCarousel.addEventListener('touchstart', e => {
-        startX = e.touches[0].clientX;
-    });
-    bannerCarousel.addEventListener('touchend', e => {
-        let endX = e.changedTouches[0].clientX;
-        if (endX - startX > 50) {
-            currentBanner = (currentBanner - 1);
-            updateBanner();
-            resetInterval();
-        } else if (startX - endX > 50) {
-            nextBanner();
-            resetInterval();
+        function resetInterval() {
+            clearInterval(bannerInterval);
+            bannerInterval = setInterval(nextBanner, 4000);
         }
-    });
-    let isDown = false,
-        startXMouse;
-    bannerCarousel.addEventListener('mousedown', e => {
-        isDown = true;
-        startXMouse = e.pageX;
-    });
-    bannerCarousel.addEventListener('mouseup', e => {
-        if (!isDown) return;
-        let diff = e.pageX - startXMouse;
-        if (diff > 50) {
-            currentBanner = (currentBanner - 1);
-            updateBanner();
-        } else if (diff < -50) {
-            nextBanner();
-        }
-        isDown = false;
+        let startX = 0;
+        bannerCarousel.addEventListener('touchstart', e => {
+            startX = e.touches[0].clientX;
+        });
+        bannerCarousel.addEventListener('touchend', e => {
+            let endX = e.changedTouches[0].clientX;
+            if (endX - startX > 50) {
+                currentBanner = (currentBanner - 1);
+                updateBanner();
+                resetInterval();
+            } else if (startX - endX > 50) {
+                nextBanner();
+                resetInterval();
+            }
+        });
+        let isDown = false,
+            startXMouse;
+        bannerCarousel.addEventListener('mousedown', e => {
+            isDown = true;
+            startXMouse = e.pageX;
+        });
+        bannerCarousel.addEventListener('mouseup', e => {
+            if (!isDown) return;
+            let diff = e.pageX - startXMouse;
+            if (diff > 50) {
+                currentBanner = (currentBanner - 1);
+                updateBanner();
+            } else if (diff < -50) {
+                nextBanner();
+            }
+            isDown = false;
+            resetInterval();
+        });
         resetInterval();
-    });
-    resetInterval();
+    }
 }
 
 // --- Funciones para renderizar productos ---
@@ -187,15 +190,17 @@ const generateProductCard = (p) => {
         stockClass = ' out-of-stock';
     }
 
+    const imageSrc = (p.image && p.image.length > 0) ? p.image[0] : 'img/no-image.png';
+
     return `
       <div class="product-card${stockClass}" data-product-id="${p.id}">
         ${bestSellerTag}
-        <img src="${p.image[0]}" alt="${p.name}" class="product-image modal-trigger" data-id="${p.id}" loading="lazy" />
+        <img src="${imageSrc}" alt="${p.name}" class="product-image modal-trigger" data-id="${p.id}" loading="lazy" />
         ${stockOverlay}
         <div class="product-info">
           <div>
             <div class="product-name">${p.name}</div>
-            <div class="product-description">${p.description}</div>
+            <div class="product-description">${p.description || ''}</div>
           </div>
           <div style="margin-top:8px">
             <div class="product-price">$${money(p.price)}</div>
@@ -239,10 +244,7 @@ function renderPagination(currentPage, totalPages, data, perPage) {
         if (active) btn.classList.add('active');
         btn.addEventListener('click', () => {
             renderProducts(allFilteredContainer, data, page, perPage, true);
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
         return btn;
     }
@@ -258,8 +260,9 @@ function renderPagination(currentPage, totalPages, data, perPage) {
 }
 
 const generateCategoryCarousel = () => {
+    if (!categoryCarousel) return;
     categoryCarousel.innerHTML = '';
-    const categories = Array.from(new Set(products.map(p => p.category))).map(c => ({ label: c }));
+    const categories = Array.from(new Set(products.map(p => p.category || 'Otros'))).map(c => ({ label: c }));
     const allItem = document.createElement('div');
     allItem.className = 'category-item';
     const allIconPath = 'img/icons/all.webp';
@@ -268,19 +271,23 @@ const generateCategoryCarousel = () => {
     categories.forEach(c => {
         const el = document.createElement('div');
         el.className = 'category-item';
-        const fileName = `img/icons/${c.label.toLowerCase().replace(/\s+/g, '_')}.webp`;
+        const fileName = `img/icons/${String(c.label).toLowerCase().replace(/\s+/g, '_')}.webp`;
         el.innerHTML = `<img class="category-image" src="${fileName}" alt="${c.label}" data-category="${c.label}"><span class="category-name">${c.label}</span>`;
         categoryCarousel.appendChild(el);
     });
 };
 
-searchInput.addEventListener('input', (e) => {
+searchInput && searchInput.addEventListener('input', (e) => {
     const q = e.target.value.trim().toLowerCase();
     if (!q) {
         showDefaultSections();
         return;
     }
-    const filtered = products.filter(p => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
+    const filtered = products.filter(p =>
+        (p.name || '').toLowerCase().includes(q) ||
+        (p.description || '').toLowerCase().includes(q) ||
+        (p.category || '').toLowerCase().includes(q)
+    );
     filteredSection.style.display = 'block';
     featuredSection.style.display = 'none';
     offersSection.style.display = 'none';
@@ -288,17 +295,22 @@ searchInput.addEventListener('input', (e) => {
     renderProducts(allFilteredContainer, filtered, 1, 20, true);
 });
 
+clearSearchBtn && clearSearchBtn.addEventListener('click', () => {
+    searchInput.value = '';
+    showDefaultSections();
+});
+
 const showDefaultSections = () => {
     featuredSection.style.display = 'block';
     offersSection.style.display = 'block';
     filteredSection.style.display = 'none';
-    const featured = shuffleArray(products.filter(p => p.featured)).slice(0, 25);
-    const offers = shuffleArray(products.filter(p => p.isOffer)).slice(0, 25);
+    const featured = shuffleArray((products.filter(p => p.featured)) || []).slice(0, 25);
+    const offers = shuffleArray((products.filter(p => p.isOffer)) || []).slice(0, 25);
     renderProducts(featuredContainer, featured, 1, 25, false);
     renderProducts(offersGrid, offers, 1, 25, false);
 };
 
-categoryCarousel.addEventListener('click', (ev) => {
+categoryCarousel && categoryCarousel.addEventListener('click', (ev) => {
     const img = ev.target.closest('.category-image');
     if (!img) return;
     const cat = img.dataset.category;
@@ -307,7 +319,7 @@ categoryCarousel.addEventListener('click', (ev) => {
         showDefaultSections();
         return;
     }
-    const filtered = products.filter(p => p.category.toLowerCase() === cat.toLowerCase());
+    const filtered = products.filter(p => (p.category || '').toLowerCase() === cat.toLowerCase());
     filteredSection.style.display = 'block';
     featuredSection.style.display = 'none';
     offersSection.style.display = 'none';
@@ -316,6 +328,7 @@ categoryCarousel.addEventListener('click', (ev) => {
 });
 
 (function makeCarouselDraggable() {
+    if (!categoryCarousel) return;
     let isDown = false,
         startX, scrollLeft;
     categoryCarousel.addEventListener('mousedown', (e) => {
@@ -356,18 +369,29 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// --- Lógica de Modales ---
+// --- Lógica de Modales (mejoradas con transición) ---
 function showModal(modal) {
+    if (!modal) return;
     modal.style.display = 'flex';
-    modal.setAttribute('aria-hidden', 'false');
+    // small timeout to allow display to take effect
+    requestAnimationFrame(() => {
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+    });
 }
 
 function closeModal(modal) {
-    modal.style.display = 'none';
+    if (!modal) return;
+    modal.classList.remove('open');
     modal.setAttribute('aria-hidden', 'true');
+    // wait for transition to finish
+    setTimeout(() => {
+        modal.style.display = 'none';
+    }, 240);
 }
 
 [productModal, cartModal, checkoutModal, orderSuccessModal].forEach(modal => {
+    if (!modal) return;
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
             closeModal(modal);
@@ -378,7 +402,7 @@ function closeModal(modal) {
     });
 });
 
-closeSuccessBtn.addEventListener('click', () => {
+closeSuccessBtn && closeSuccessBtn.addEventListener('click', () => {
     closeModal(orderSuccessModal);
 });
 
@@ -387,7 +411,7 @@ function openProductModal(id) {
     if (!product) return;
     currentProduct = product;
     modalProductName.textContent = product.name;
-    modalProductDescription.textContent = product.description;
+    modalProductDescription.textContent = product.description || '';
     modalProductPrice.textContent = `$${money(product.price)}`;
     qtyInput.value = 1;
     modalAddToCartBtn.dataset.id = product.id;
@@ -419,12 +443,12 @@ function updateCarousel(images) {
     carouselImagesContainer.style.transform = `translateX(0)`;
 }
 
-prevBtn.addEventListener('click', () => {
+prevBtn && prevBtn.addEventListener('click', () => {
     if (currentImageIndex > 0) currentImageIndex--;
     updateCarouselPosition();
 });
 
-nextBtn.addEventListener('click', () => {
+nextBtn && nextBtn.addEventListener('click', () => {
     const imgs = carouselImagesContainer.querySelectorAll('.carousel-image');
     if (currentImageIndex < imgs.length - 1) currentImageIndex++;
     updateCarouselPosition();
@@ -438,6 +462,7 @@ function updateCarouselPosition() {
 }
 window.addEventListener('resize', updateCarouselPosition);
 
+// --- CART UI ---
 function updateCart() {
     cartItemsContainer.innerHTML = '';
     if (cart.length === 0) {
@@ -454,7 +479,20 @@ function updateCart() {
         totalItems += item.qty;
         const div = document.createElement('div');
         div.className = 'cart-item';
-        div.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><img src="${item.image}" alt="${item.name}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;"><div><strong>${item.name}</strong><div style="font-size:.9rem;color:#666">${item.qty} x $${money(item.price)}</div></div></div><div class="controls"><button class="qty-btn" data-idx="${idx}" data-op="dec">-</button><button class="qty-btn" data-idx="${idx}" data-op="inc">+</button></div>`;
+        div.innerHTML = `
+            <div style="display:flex;align-items:center;gap:12px;">
+                <img src="${item.image || 'img/no-image.png'}" alt="${item.name}">
+                <div style="min-width:120px">
+                    <div style="font-weight:700;font-size:0.95rem">${item.name}</div>
+                    <div style="color:var(--muted);font-size:0.88rem">$${money(item.price)}</div>
+                </div>
+            </div>
+            <div class="controls">
+                <button class="qty-btn" data-idx="${idx}" data-op="dec" aria-label="Disminuir cantidad">-</button>
+                <span style="min-width:22px;text-align:center;font-weight:700">${item.qty}</span>
+                <button class="qty-btn" data-idx="${idx}" data-op="inc" aria-label="Aumentar cantidad">+</button>
+            </div>
+        `;
         cartItemsContainer.appendChild(div);
     });
     cartBadge.style.display = 'flex';
@@ -470,7 +508,7 @@ function addToCart(id, qty = 1) {
     const availableStock = p.stock || 0;
     const existingInCart = cart.find(i => i.id === id);
     const currentQtyInCart = existingInCart ? existingInCart.qty : 0;
-    
+
     if (currentQtyInCart + qty > availableStock) {
         alert(`En el momento solo quedan ${availableStock} unidades.`);
         return;
@@ -484,20 +522,21 @@ function addToCart(id, qty = 1) {
             name: p.name,
             price: p.price,
             qty,
-            image: p.image[0]
+            image: (p.image && p.image[0]) || 'img/no-image.png'
         });
     }
     updateCart();
 }
 
-cartItemsContainer.addEventListener('click', (e) => {
+cartItemsContainer && cartItemsContainer.addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-idx]');
     if (!btn) return;
     const idx = parseInt(btn.dataset.idx, 10);
     const op = btn.dataset.op;
 
     const productInCart = cart[idx];
-    const originalProduct = products.find(p => p.id === productInCart.id);
+    if (!productInCart) return;
+    const originalProduct = products.find(p => p.id === productInCart.id) || { stock: 0 };
 
     if (op === 'inc') {
         if ((productInCart.qty + 1) > (originalProduct.stock || 0)) {
@@ -513,12 +552,12 @@ cartItemsContainer.addEventListener('click', (e) => {
     updateCart();
 });
 
-cartBtn.addEventListener('click', () => {
+cartBtn && cartBtn.addEventListener('click', () => {
     showModal(cartModal);
     updateCart();
 });
 
-checkoutBtn.addEventListener('click', () => {
+checkoutBtn && checkoutBtn.addEventListener('click', () => {
     if (cart.length === 0) {
         alert('El carrito está vacío');
         return;
@@ -526,11 +565,11 @@ checkoutBtn.addEventListener('click', () => {
     showModal(checkoutModal);
 });
 
-finalizeBtn.addEventListener('click', () => {
-    const name = customerNameInput.value.trim();
-    const address = customerAddressInput.value.trim();
+finalizeBtn && finalizeBtn.addEventListener('click', () => {
+    const name = (customerNameInput && customerNameInput.value || '').trim();
+    const address = (customerAddressInput && customerAddressInput.value || '').trim();
     const payment = document.querySelector('input[name="payment"]:checked')?.value || '';
-    
+
     if (!termsConsentCheckbox.checked) {
         alert('Debes aceptar los Términos y Condiciones y la Política de Datos para continuar.');
         return;
@@ -561,7 +600,7 @@ function showOrderSuccessModal() {
     showModal(orderSuccessModal);
 }
 
-whatsappBtn.addEventListener('click', async () => {
+whatsappBtn && whatsappBtn.addEventListener('click', async () => {
     if (Object.keys(orderDetails).length === 0) {
         alert('No hay detalles del pedido para enviar.');
         return;
@@ -578,7 +617,7 @@ whatsappBtn.addEventListener('click', async () => {
             .from('orders')
             .insert([{
                 customer_name: orderDetails.name,
-                customer_address: orderDetails.address, 
+                customer_address: orderDetails.address,
                 payment_method: orderDetails.payment,
                 total_amount: orderDetails.total,
                 order_items: orderDetails.items,
@@ -587,24 +626,23 @@ whatsappBtn.addEventListener('click', async () => {
             .select();
 
         if (orderError) {
-           
             console.error('Error al guardar la orden en DB:', orderError);
             alert('Error al guardar la orden en DB: ' + orderError.message);
             return;
         }
-        
+
         // 2. Intentar llamar al API Route
         const response = await fetch('api/place-order', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 orderDetails,
-                products 
+                products
             })
         });
 
         let result = {};
-        
+
         if (!response.ok) {
             const errorText = await response.text();
             console.error('API Route Falló con status:', response.status, 'Respuesta:', errorText);
@@ -618,34 +656,35 @@ whatsappBtn.addEventListener('click', async () => {
 
         // 3. Enviar mensaje de WhatsApp
         const whatsappNumber = '573227671829';
-        let message = `Hola mi nombre es ${encodeURIComponent(orderDetails.name)}.%0AHe realizado un pedido para la dirección ${encodeURIComponent(orderDetails.address)} quiero confirmar el pago en ${encodeURIComponent(orderDetails.payment)}.%0A%0A--- Mi pedido es: ---%0A`;
+        let message = `Hola mi nombre es ${encodeURIComponent(orderDetails.name)}.%0AHe realizado un pedido para la dirección ${encodeURIComponent(orderDetails.address)}.%0A%0A`;
         orderDetails.items.forEach(item => {
             message += `- ${encodeURIComponent(item.name)} x${item.qty} = $${money(item.price * item.qty)}%0A`;
         });
         message += `%0ATotal: $${money(orderDetails.total)}`;
         const link = `https://wa.me/${whatsappNumber}?text=${message}`;
         window.open(link, '_blank');
-        
+
         // 4. Limpiar y actualizar UI
-        cart = []; 
-        orderDetails = {}; 
-        
-        products = await fetchProductsFromSupabase(); 
-        showDefaultSections(); 
-        updateCart(); 
+        cart = [];
+        orderDetails = {};
+
+        products = await fetchProductsFromSupabase();
+        showDefaultSections();
+        updateCart();
         closeModal(orderSuccessModal);
 
     } catch (error) {
-        
-        alert('Error al procesar el pedido: ' + error.message);
+        alert('Error al procesar el pedido: ' + (error.message || error));
         console.error('Fallo en el pedido:', error);
     }
 });
 
+// PWA install prompt
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    installBanner.classList.add('visible');
+    installBanner && installBanner.classList.add('visible');
+    if (installBanner) { installBanner.hidden = false; installBanner.setAttribute('aria-hidden', 'false'); }
 });
 
 installPromptBtn && installPromptBtn.addEventListener('click', async () => {
@@ -656,13 +695,14 @@ installPromptBtn && installPromptBtn.addEventListener('click', async () => {
     deferredPrompt = null;
 });
 
-installCloseBtn && installCloseBtn.addEventListener('click', () => installBanner.classList.remove('visible'));
+installCloseBtn && installCloseBtn.addEventListener('click', () => {
+    if (installBanner) installBanner.classList.remove('visible');
+});
 
 // --- Funciones de DB ---
 const fetchProductsFromSupabase = async () => {
     if (!supabaseClient) {
-        
-        return []; 
+        return [];
     }
     try {
         const { data, error } = await supabaseClient
@@ -673,7 +713,7 @@ const fetchProductsFromSupabase = async () => {
         }
         return data;
     } catch (err) {
-        console.error('Error al cargar los productos:', err.message);
+        console.error('Error al cargar los productos:', err.message || err);
         alert('Hubo un error al cargar los productos. Por favor, revisa la consola para más detalles.');
         return [];
     }
@@ -681,17 +721,16 @@ const fetchProductsFromSupabase = async () => {
 
 const loadConfigAndInitSupabase = async () => {
     try {
-        
         const response = await fetch('api/get-config');
-        
+
         if (!response.ok) {
             const errorText = await response.text();
             console.error('Error del API Route api/get-config:', errorText);
             throw new Error(`Fallo al cargar la configuración desde V: ${response.status} ${response.statusText}`);
         }
-        
+
         const config = await response.json();
-        
+
         if (!config.url || !config.anonKey) {
              throw new Error("El API Route no retornó las claves de DB. Revisa las Variables de Entorno en Vercel.");
         }
@@ -699,7 +738,6 @@ const loadConfigAndInitSupabase = async () => {
         SUPABASE_URL = config.url;
         SUPABASE_ANON_KEY = config.anonKey;
 
-        
         supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         products = await fetchProductsFromSupabase();
@@ -710,13 +748,12 @@ const loadConfigAndInitSupabase = async () => {
         updateCart();
     } catch (error) {
         console.error('Error FATAL al iniciar la aplicación:', error);
-        
+
         const loadingMessage = document.createElement('div');
-        loadingMessage.style = 'position:fixed;top:0;left:0;width:100%;height:100%;background:white;display:flex;align-items:center;justify-content:center;color:red;font-weight:bold;text-align:center;padding:20px;z-index:9999;';
+        loadingMessage.style = 'position:fixed;top:0;left:0;width:100%;height:100%;background:white;display:flex;align-items:center;justify-content:center;color:red;font-weight:bold;text-align:center;padding:20px;z-index:9999';
         loadingMessage.textContent = 'ERROR DE INICIALIZACIÓN: No se pudo cargar la configuración de la tienda. Revisa la consola para más detalles (Faltan variables de entorno en Vercel).';
         document.body.appendChild(loadingMessage);
     }
 };
-
 
 document.addEventListener('DOMContentLoaded', loadConfigAndInitSupabase);

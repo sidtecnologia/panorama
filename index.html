@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Supermercados Panorama</title>
     <link rel="manifest" href="./manifest.json" />
-    <meta name="theme-color" content="#721919" />
+    <meta name="theme-color" content="#007c3d" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="icon" href="img/favicon.png" />
@@ -17,69 +17,81 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <div class="page-container">
+    <div class="page-shell">
+        <header class="navbar" role="banner">
+            <div class="navbar-inner">
+                <div class="brand" aria-label="Supermercados Panorama">
+                    <img src="img/favicon.png" alt="Logo Panorama" class="brand-logo">
+                    <h1 class="logo">Panorama</h1>
+                </div>
 
-        <nav class="navbar">
-            <h1 class="logo">Panorama</h1>
-            <div class="search-container">
-                <input id="search-input" type="search" placeholder="Buscar producto, marca o categoría..." />
+                <div class="search-wrapper" role="search">
+                    <label for="search-input" class="sr-only">Buscar productos</label>
+                    <div class="search-field">
+                        <i class="fas fa-search search-icon" aria-hidden="true"></i>
+                        <input id="search-input" type="search" placeholder="Buscar producto, marca o categoría..." aria-label="Buscar producto, marca o categoría" />
+                        <button id="clear-search" class="clear-search" aria-label="Limpiar búsqueda" title="Limpiar búsqueda"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+
+                <div class="nav-actions">
+                    <button id="cart-btn" class="nav-cart-btn" aria-label="Ver carrito">
+                        <i class="fas fa-shopping-basket"></i>
+                        <span id="cart-badge" class="cart-badge" aria-live="polite">0</span>
+                    </button>
+                </div>
             </div>
-            <button id="cart-btn" class="nav-cart-btn">
-                <i class="fas fa-shopping-cart"></i>
-                <span id="cart-badge" class="cart-badge">0</span>
-            </button>
-        </nav>
 
-        <section class="main-carousel-wrapper">
-
-        <section class="banner-section">
-          <div class="banner-carousel" id="banner-carousel">
-            <div class="banner-slide"><img src="img/baner/baner1.webp" alt="Promoción 1"></div>
-            <div class="banner-slide"><img src="img/baner/baner2.webp" alt="Promoción 2"></div>
-            <div class="banner-slide"><img src="img/baner/baner3.webp" alt="Promoción 3"></div>
-            <div class="banner-slide"><img src="img/baner/baner4.webp" alt="Promoción 4"></div>
-            <div class="banner-slide"><img src="img/baner/baner5.webp" alt="Promoción 5"></div>
-            <div class="banner-slide"><img src="img/baner/baner6.webp" alt="Promoción 6"></div>
-            <div class="banner-slide"><img src="img/baner/baner7.webp" alt="Promoción 6"></div>
-            <div class="banner-slide"><img src="img/baner/baner8.webp" alt="Promoción 6"></div>
-            <div class="banner-slide"><img src="img/baner/baner9.webp" alt="Promoción 6"></div>
-          </div>
-          <div class="banner-dots" id="banner-dots"></div>
-        </section>
-
-        </nav> <div class="ticker-wrapper">
-            <div class="ticker-text">
-                 <span>Supermercados Panorama APP</span>
-                <span>Envío Gratis En Compras Superiores A $150.000 ✨</span>
-                <span>Descuentos Del 20% En Productos Seleccionados solo En Nuestra App 🔥</span>
-                <span>Nuevos Productos Ya Disponibles 🚀</span>
-                 <span>Supermercados Panorama APP</span>
-                <span>Descuentos Del 20% En Productos Seleccionados solo En Nuestra App 🔥</span>
-                <span>Nuevos Productos Ya Disponibles 🚀</span>
-                <span>Supermercados Panorama APP 🚀</span>
-                 <span>Supermercados Panorama APP</span>
-                <span>Envío Gratis En Compras Superiores A $150.000 ✨</span>
-                <span>Descuentos Del 20% En Productos Seleccionados solo En Nuestra App 🔥</span>
-                <span>Nuevos Productos Ya Disponibles 🚀</span>
-                 <span>Supermercados Panorama APP</span>
-                <span>Descuentos Del 20% En Productos Seleccionados solo En Nuestra App 🔥</span>
-                <span>Nuevos Productos Ya Disponibles 🚀</span>
-                <span>Supermercados Panorama APP 🚀</span>
+            <!-- small secondary row with promos / quick actions -->
+            <div class="navbar-bottom">
+                <div class="promo-pill">Envío gratis en compras superiores a <strong>$150.000</strong></div>
+                <nav class="quick-links" aria-label="Enlaces rápidos">
+                    <a href="#featured-section">Destacados</a>
+                    <a href="#offers-section">Ofertas</a>
+                    <a href="#ads-section">Promociones</a>
+                </nav>
             </div>
-        </div>
+        </header>
 
-        <nav class="menu-container">
-            <div class="category-carousel-container">
-                <div id="category-carousel" class="category-carousel"></div>
+        <main class="page-container" id="root">
+            <section class="main-carousel-wrapper">
+                <section class="banner-section">
+                  <div class="banner-carousel" id="banner-carousel" aria-hidden="false" role="region" aria-label="Promociones">
+                    <div class="banner-slide"><img src="img/baner/baner1.webp" alt="Promoción 1"></div>
+                    <div class="banner-slide"><img src="img/baner/baner2.webp" alt="Promoción 2"></div>
+                    <div class="banner-slide"><img src="img/baner/baner3.webp" alt="Promoción 3"></div>
+                    <div class="banner-slide"><img src="img/baner/baner4.webp" alt="Promoción 4"></div>
+                    <div class="banner-slide"><img src="img/baner/baner5.webp" alt="Promoción 5"></div>
+                    <div class="banner-slide"><img src="img/baner/baner6.webp" alt="Promoción 6"></div>
+                    <div class="banner-slide"><img src="img/baner/baner7.webp" alt="Promoción 7"></div>
+                    <div class="banner-slide"><img src="img/baner/baner8.webp" alt="Promoción 8"></div>
+                    <div class="banner-slide"><img src="img/baner/baner9.webp" alt="Promoción 9"></div>
+                  </div>
+                  <div class="banner-dots" id="banner-dots" aria-hidden="true"></div>
+                </section>
+            </section>
+
+            <div class="ticker-wrapper" aria-hidden="false">
+                <div class="ticker-text" aria-hidden="true">
+                     <span>Supermercados Panorama APP</span>
+                    <span>Envío Gratis En Compras Superiores A $150.000 ✨</span>
+                    <span>Descuentos Del 20% En Productos Seleccionados solo En Nuestra App 🔥</span>
+                    <span>Nuevos Productos Ya Disponibles 🚀</span>
+                    <span>Supermercados Panorama APP 🚀</span>
+                </div>
             </div>
-        </nav>
 
-        <main class="menu-container">
-            <section id="filtered-section" class="menu-section" style="display:none;">
+            <nav class="menu-container" aria-label="Categorías">
+                <div class="category-carousel-container">
+                    <div id="category-carousel" class="category-carousel" tabindex="0"></div>
+                </div>
+            </nav>
+
+            <section id="filtered-section" class="menu-section filtered-section" style="display:none;">
                 <h2 id="search-results-title" class="section-title">Resultados</h2>
                 <div id="no-products-message" class="empty-cart-msg" style="display:none;">No se encontraron productos.</div>
                 <div id="all-filtered-products" class="product-grid"></div>
-                <div id="pagination-container"></div>
+                <div id="pagination-container" class="pagination-wrap"></div>
             </section>
 
             <section id="featured-section" class="menu-section">
@@ -88,109 +100,116 @@
             </section>
 
             <section id="ads-section" class="ads-section">
-            <div class="ads-grid">
-                <img src="img/baner/baner10.webp" alt="Publicidad 1"class="ad-image" data-product-id="6fbce90e-440e-4e18-81e3-51c5fad0b4a1">
-                <img src="img/baner/baner11.webp" alt="Publicidad 1"class="ad-image" data-product-id="728b36cf-6b4d-4f50-8c99-ccde786cf031">
-                <img src="img/baner/baner12.webp" alt="Publicidad 1"class="ad-image" data-product-id="7ee78632-0644-4135-8844-ca380201fe96">
-                <img src="img/baner/baner10.webp" alt="Publicidad 1"class="ad-image" data-product-id="9c6280ad-e209-441b-b750-7a152c038b38">
-            </div>
+                <h2 class="section-title">Promociones</h2>
+                <div class="ads-grid">
+                    <img src="img/baner/baner10.webp" alt="Publicidad 1"class="ad-image" data-product-id="6fbce90e-440e-4e18-81e3-51c5fad0b4a1">
+                    <img src="img/baner/baner11.webp" alt="Publicidad 2"class="ad-image" data-product-id="728b36cf-6b4d-4f50-8c99-ccde786cf031">
+                    <img src="img/baner/baner12.webp" alt="Publicidad 3"class="ad-image" data-product-id="7ee78632-0644-4135-8844-ca380201fe96">
+                    <img src="img/baner/baner10.webp" alt="Publicidad 4"class="ad-image" data-product-id="9c6280ad-e209-441b-b750-7a152c038b38">
+                </div>
             </section>
 
             <section id="offers-section" class="menu-section">
                 <h2 class="section-title">Ofertas Exclusivas</h2>
                 <div id="offers-grid" class="product-grid"></div>
             </section>
-        </main>
 
-        <div id="productModal" class="modal" aria-hidden="true">
-            <div class="modal-content-wrapper">
-                <div class="modal-card">
-                    <button class="modal-close close-button" aria-label="Cerrar">&times;</button>
-                    <div class="carousel-container">
-                        <button id="prev-btn" class="carousel-btn prev-btn"><i class="fas fa-circle-arrow-left"></i></button>
-                        <div id="carousel-images-container" class="carousel-images-container"></div>
-                        <button id="next-btn" class="carousel-btn next-btn"><i class="fas fa-circle-arrow-right"></i></button>
-                    </div>
-                    <div id="image-modal-caption" class="modal-caption">
-                        <h3 id="modal-product-name"></h3>
-                        <p id="modal-product-description"></p>
-                        <p id="modal-product-price" class="price"></p>
-                        <div class="qty-row">
-                            <label for="qty-input">Cantidad</label>
-                            <input id="qty-input" type="number" min="1" value="1" />
+            <!-- Product Modal -->
+            <div id="productModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Detalles del producto">
+                <div class="modal-content-wrapper">
+                    <div class="modal-card" role="document">
+                        <button class="modal-close close-button" aria-label="Cerrar">&times;</button>
+                        <div class="carousel-container">
+                            <button id="prev-btn" class="carousel-btn prev-btn" aria-label="Imagen anterior"><i class="fas fa-arrow-left"></i></button>
+                            <div id="carousel-images-container" class="carousel-images-container" role="img" aria-live="polite"></div>
+                            <button id="next-btn" class="carousel-btn next-btn" aria-label="Siguiente imagen"><i class="fas fa-arrow-right"></i></button>
                         </div>
-                        <button id="modal-add-to-cart-btn" class="add-to-cart-btn">Añadir al carrito</button>
+                        <div id="image-modal-caption" class="modal-caption">
+                            <h3 id="modal-product-name"></h3>
+                            <p id="modal-product-description"></p>
+                            <p id="modal-product-price" class="price"></p>
+                            <div class="qty-row">
+                                <label for="qty-input">Cantidad</label>
+                                <input id="qty-input" type="number" min="1" value="1" />
+                            </div>
+                            <button id="modal-add-to-cart-btn" class="add-to-cart-btn">Añadir al carrito</button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div id="cartModal" class="modal" aria-hidden="true">
-            <div class="modal-content-wrapper">
-                <div class="cart-modal-card">
-                    <button class="modal-close close-cart-btn" aria-label="Cerrar">&times;</button>
-                    <h3>Tu pedido</h3>
-                    <div id="cart-items" class="cart-items"></div>
-                    <div class="cart-summary">
-                        <strong>Total: $<span id="cart-total">0</span></strong>
+            <!-- Cart Modal -->
+            <div id="cartModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Carrito">
+                <div class="modal-content-wrapper">
+                    <div class="cart-modal-card" role="document">
+                        <button class="modal-close close-cart-btn" aria-label="Cerrar">&times;</button>
+                        <h3>Tu pedido</h3>
+                        <div id="cart-items" class="cart-items"></div>
+                        <div class="cart-summary">
+                            <strong>Total: $<span id="cart-total">0</span></strong>
+                        </div>
+                        <button id="checkout-btn" class="checkout-btn">Hacer Pedido</button>
                     </div>
-                    <button id="checkout-btn" class="checkout-btn">Hacer Pedido</button>
                 </div>
             </div>
-        </div>
 
-        <div id="checkoutModal" class="modal" aria-hidden="true">
-          <div class="modal-content-wrapper">
-            <div class="checkout-modal-card">
-              <button class="modal-close close-checkout-btn">&times;</button>
-              <h2>Datos de entrega</h2>
-              <div class="form-group">
-                <label for="customer-name">Nombre:</label>
-                <input type="text" id="customer-name" placeholder="Tu nombre" required>
+            <!-- Checkout Modal -->
+            <div id="checkoutModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Finalizar compra">
+              <div class="modal-content-wrapper">
+                <div class="checkout-modal-card">
+                  <button class="modal-close close-checkout-btn" aria-label="Cerrar">&times;</button>
+                  <h2>Datos de entrega</h2>
+                  <div class="form-group">
+                    <label for="customer-name">Nombre:</label>
+                    <input type="text" id="customer-name" placeholder="Tu nombre" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="customer-address">Dirección:</label>
+                    <input type="text" id="customer-address" placeholder="Tu dirección de entrega" required>
+                  </div>
+                  <label>Método de pago:</label>
+                  <div class="payment-options">
+                      <label><input type="radio" name="payment" value="Efectivo" checked> Efectivo</label>
+                      <label><input type="radio" name="payment" value="Transferencia"> Transferencia</label>
+                  </div>
+
+                  <div class="terms-consent">
+                      <input type="checkbox" id="terms-consent-checkbox" required>
+                      <label for="terms-consent-checkbox">
+                          Acepto los <a href="./privacy/index.html" target="_blank">términos y Condiciones tratamiento de datos</a>
+                      </label>
+                  </div>
+
+                  <button id="finalize-btn" class="checkout-btn">Continuar</button>
+                </div>
               </div>
-              <div class="form-group">
-                <label for="customer-address">Dirección:</label>
-                <input type="text" id="customer-address" placeholder="Tu dirección de entrega" required>
-              </div>
-              <label>Método de pago:</label>
-              <div>
-                  <label><input type="radio" name="payment" value="Efectivo" checked> Efectivo</label>
-                  <label><input type="radio" name="payment" value="Transferencia"> Transferencia</label>
-              </div>
-              
-              <div class="terms-consent">
-                  <input type="checkbox" id="terms-consent-checkbox" required>
-                  <label for="terms-consent-checkbox">
-                      Acepto los <a href="./privacy/index.html" target="_blank">términos y Condiciones tratamiento de datos</a>
-                  </label>
-              </div>
-              
-              <button id="finalize-btn" class="checkout-btn">Continuar</button>
             </div>
-          </div>
-        </div>
 
-        <div id="orderSuccessModal" class="modal" aria-hidden="true">
-          <div class="modal-content-wrapper">
-            <div class="success-modal-card">
-              <button class="modal-close close-success-btn">&times;</button>
-              <h2>¡Tu compra está casi lista!</h2>
-              <p id="order-success-description"></p>
-              <p><strong>Total:</strong> $<span id="order-success-total"></span></p>
-              <p>Luego de confirmar el pago enviaremos tu pedido en un par de horas.</p>
-              <p>Gracias por tu compra.</p>
-              <button id="whatsapp-btn" class="checkout-btn"><i class="fab fa-whatsapp"></i> Confirmar pago</button>
-              <button id="close-success-btn" class="add-to-cart-btn" style="background:#666">Rechazar</button>
+            <!-- Order success -->
+            <div id="orderSuccessModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Pedido exitoso">
+              <div class="modal-content-wrapper">
+                <div class="success-modal-card">
+                  <button class="modal-close close-success-btn" aria-label="Cerrar">&times;</button>
+                  <h2>¡Tu compra está casi lista!</h2>
+                  <p id="order-success-description">Revisa y confirma tu orden</p>
+                  <p><strong>Total:</strong> $<span id="order-success-total"></span></p>
+                  <p>Luego de confirmar el pago enviaremos tu pedido en un par de horas.</p>
+                  <p>Gracias por tu compra.</p>
+                  <div class="success-actions">
+                    <button id="whatsapp-btn" class="checkout-btn"><i class="fab fa-whatsapp"></i> Confirmar pago</button>
+                    <button id="close-success-btn" class="add-to-cart-btn neutral">Rechazar</button>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        <footer class="footer-menu">
-            <p>&copy; <span id="year"></span> TECSIN Todos los derechos reservados - Supermercados Panorama</p>
-        </footer>
+            <footer class="footer-menu" role="contentinfo">
+                <p>&copy; <span id="year"></span> TECSIN Todos los derechos reservados - Supermercados Panorama</p>
+            </footer>
+        </main>
     </div>
 
-    <div id="install-banner" class="install-banner" hidden>
+    <div id="install-banner" class="install-banner" hidden aria-hidden="true">
         <span>Añadir a pantalla de inicio</span>
         <div>
             <button id="install-close-btn">No</button>
