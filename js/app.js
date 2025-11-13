@@ -2,7 +2,7 @@
  * @license
  * Copyright © 2025 Tecnología y Soluciones Informáticas. Todos los derechos reservados.
  *
- * SUPERMERCADO PANORAMA PWA
+ * SUPERMERCADOPANORAMA PWA
  *
  * Este software es propiedad confidencial y exclusiva de TECSIN.
  * El permiso de uso de este software es temporal para pruebas en Supermercados Panorama.
