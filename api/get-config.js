@@ -12,7 +12,7 @@ export default (req, res) => {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     
     return res.status(500).json({ 
-      error: 'Variables de entorno de Supabase faltantes en la configuración de Vercel.',
+      error: 'Variables de entorno de Base de datos faltantes en la configuración de Vercel.',
       url: null,
       anonKey: null
     });
