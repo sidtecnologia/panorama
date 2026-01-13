@@ -2,17 +2,23 @@ import React, { useEffect, useState, useRef } from 'react';
 
 const Navbar = ({ cartCount, onSearch, onOpenCart }) => {
     const [pulse, setPulse] = useState(false);
+    const [floating, setFloating] = useState(false);
     const intervalRef = useRef(null);
 
     useEffect(() => {
         if (cartCount === 0) {
+            setFloating(false);
             intervalRef.current = setInterval(() => {
                 setPulse(true);
                 setTimeout(() => setPulse(false), 600);
             }, 3000);
         } else {
-            if (intervalRef.current) clearInterval(intervalRef.current);
             setPulse(false);
+            setFloating(true);
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
         }
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current);
@@ -37,7 +43,7 @@ const Navbar = ({ cartCount, onSearch, onOpenCart }) => {
 
             <button
                 id="cart-btn"
-                className={`nav-cart-btn ${pulse ? 'pulse' : ''} ${cartCount > 0 ? 'has-items' : ''}`}
+                className={`nav-cart-btn ${pulse ? 'pulse' : ''} ${floating ? 'cart-animate' : ''} ${cartCount > 0 ? 'has-items' : ''}`}
                 onClick={onOpenCart}
             >
                 <svg

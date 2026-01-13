@@ -35,7 +35,12 @@ function App() {
   useEffect(() => {
     const handler = (e) => {
       e.preventDefault();
-      e.returnValue = '';
+      const confirmClose = window.confirm('¿Seguro que quieres salir de la aplicación?');
+      if (!confirmClose) {
+        e.returnValue = '';
+      } else {
+        e.returnValue = undefined;
+      }
     };
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
@@ -257,8 +262,10 @@ function App() {
         <CartModal
           isOpen={isCartOpen}
           cart={cart}
+          products={products}
           onClose={() => setIsCartOpen(false)}
           onUpdateQty={updateCartQty}
+          onAddToCart={addToCart}
           onCheckout={() => { if(cart.length === 0) return alert('El carrito está vacío'); setIsCheckoutOpen(true); }}
         />
 
