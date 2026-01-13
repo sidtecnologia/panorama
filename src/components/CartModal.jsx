@@ -30,7 +30,7 @@ const CartModal = ({ isOpen, cart, products = [], onClose, onUpdateQty, onChecko
         setIsDragging(true);
         startXRef.current = e.clientX || (e.touches && e.touches[0].clientX) || 0;
         scrollLeftRef.current = scrollRef.current ? scrollRef.current.scrollLeft : 0;
-        if (scrollRef.current) scrollRef.current.setPointerCapture(e.pointerId);
+        if (scrollRef.current && e.pointerId != null) scrollRef.current.setPointerCapture(e.pointerId);
     };
 
     const onPointerMove = (e) => {
@@ -43,7 +43,7 @@ const CartModal = ({ isOpen, cart, products = [], onClose, onUpdateQty, onChecko
     const onPointerUp = (e) => {
         isDownRef.current = false;
         setIsDragging(false);
-        if (scrollRef.current) {
+        if (scrollRef.current && e && e.pointerId != null) {
             try { scrollRef.current.releasePointerCapture(e.pointerId); } catch (err) {}
         }
     };
@@ -63,22 +63,22 @@ const CartModal = ({ isOpen, cart, products = [], onClose, onUpdateQty, onChecko
                     ) : (
                         cart.map((item, idx) => (
                             <div key={item.id} className="cart-item">
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div className="cart-item-left">
                                     <img
                                         src={item.image && item.image.startsWith('http') ? item.image : `/assets/img/${item.image}`}
                                         alt={item.name}
-                                        style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px' }}
+                                        className="cart-item-img"
                                     />
-                                    <div style={{ minWidth: 0 }}>
-                                        <strong style={{ fontSize: '0.9rem', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</strong>
-                                        <div style={{ fontSize: '0.85rem', color: '#666' }}>
+                                    <div className="item-info">
+                                        <strong className="item-title">{item.name}</strong>
+                                        <div className="item-sub">
                                             {item.qty} x ${money(item.price)}
                                         </div>
                                     </div>
                                 </div>
                                 <div className="controls">
                                     <button className="qty-btn" onClick={() => onUpdateQty(idx, -1)}>-</button>
-                                    <span style={{ minWidth: '20px', textAlign: 'center' }}>{item.qty}</span>
+                                    <span className="qty-display" aria-live="polite">{item.qty}</span>
                                     <button className="qty-btn" onClick={() => onUpdateQty(idx, 1)}>+</button>
                                 </div>
                             </div>
@@ -87,8 +87,6 @@ const CartModal = ({ isOpen, cart, products = [], onClose, onUpdateQty, onChecko
                 </div>
 
                 <div style={{ borderTop: '1px solid #eee', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px', marginTop: 'auto' }}>
-                    
-
                     {cart.length > 0 && (
                         <>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '1.05rem' }}>
@@ -106,7 +104,8 @@ const CartModal = ({ isOpen, cart, products = [], onClose, onUpdateQty, onChecko
                         style={{ width: '100%', background: '#666', border: 'none' }}
                     >
                         Continuar comprando
-                    </button><h4 style={{ margin: '8px 0' }}>Recomendados para ti</h4>
+                    </button>
+                    <h4 style={{ margin: '8px 0' }}>Recomendados para ti</h4>
                     <div
                         className="recommendations-scroll"
                         ref={scrollRef}

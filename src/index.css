@@ -1074,3 +1074,87 @@ body {
   background: linear-gradient(90deg, var(--primary), #2fa15f);
   transition: width 180ms linear;
 }
+
+/* AÑADIR AL FINAL: ajustes específicos y no destructivos para el modal del carrito */
+.cart-modal-card .cart-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.cart-modal-card .cart-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.cart-modal-card .cart-item-img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex: 0 0 auto;
+}
+
+.cart-modal-card .item-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.cart-modal-card .item-title {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.cart-modal-card .item-sub {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.cart-modal-card .controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex: 0 0 auto;
+  margin-left: 12px;
+}
+
+.cart-modal-card .qty-display {
+  min-width: 28px;
+  text-align: center;
+  display: inline-block;
+}
+
+.cart-modal-card .qty-btn {
+  background: #eee;
+  border: none;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+@media (max-width: 420px) {
+  .cart-modal-card .controls {
+    margin-left: 8px;
+  }
+  .cart-modal-card .cart-item-img {
+    width: 44px;
+    height: 44px;
+  }
+  .cart-modal-card .item-title {
+    font-size: 0.85rem;
+  }
+}
