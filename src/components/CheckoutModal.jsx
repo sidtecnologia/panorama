@@ -82,7 +82,7 @@ const CheckoutModal = ({ isOpen, onClose, onFinalize, onBackToCart }) => {
         onClick={handleBack}
         style={{ width: '100%', background: '#eee', color: '#333', border: 'none' }}
         >
-        Continuar comprando
+        Regresar al carrito
         </button>
         </div>
         </div>
