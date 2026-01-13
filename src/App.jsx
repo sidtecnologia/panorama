@@ -32,6 +32,15 @@ function App() {
     fetchProducts();
   }, []);
 
+  useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, []);
+
   const fetchProducts = async () => {
     try {
       const { data, error } = await supabase.from('products').select('*');
@@ -51,9 +60,9 @@ function App() {
       return;
     }
     const filtered = products.filter(p =>
-    p.name.toLowerCase().includes(query) ||
-    p.description.toLowerCase().includes(query) ||
-    p.category.toLowerCase().includes(query)
+      p.name.toLowerCase().includes(query) ||
+      p.description.toLowerCase().includes(query) ||
+      p.category.toLowerCase().includes(query)
     );
     setFilteredProducts(filtered);
     setSearchTitle(`Resultados para "${query}"`);
@@ -138,18 +147,27 @@ function App() {
         }),
       });
 
-      const result = await response.json();
+      const text = await response.text();
+      let result = null;
+      try {
+        result = text ? JSON.parse(text) : null;
+      } catch (err) {
+        result = null;
+      }
 
-      if (!response.ok) throw new Error(result.error || 'Error al procesar el pedido');
+      if (!response.ok) {
+        const errMsg = result && result.error ? result.error : `HTTP ${response.status}`;
+        throw new Error(errMsg);
+      }
 
       const whatsappNumber = '573227671829';
-      let message = `Hola mi nombre es ${encodeURIComponent(orderDetails.name)}.%0AHe realizado un pedido para la dirección ${encodeURIComponent(orderDetails.address)} quiero confirmar el pago en ${encodeURIComponent(orderDetails.payment)}.%0A%0A--- Mi pedido es: ---%0A`;
+      let message = `Hola mi nombre es ${orderDetails.name}\nDirección: ${orderDetails.address}\nMétodo de pago: ${orderDetails.payment}\n\n`;
       orderDetails.items.forEach(item => {
-        message += `- ${encodeURIComponent(item.name)} x${item.qty} = $${money(item.price * item.qty)}%0A`;
+        message += `- ${item.name} x${item.qty} = $${money(item.price * item.qty)}\n`;
       });
-      message += `%0ATotal: $${money(orderDetails.total)}`;
+      message += `\nTotal: $${money(orderDetails.total)}`;
 
-      window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
+      window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, '_blank');
 
       setCart([]);
       setOrderDetails(null);
@@ -169,100 +187,100 @@ function App() {
 
   const renderProductGrid = (list) => (
     <div className="product-grid">
-    {list.length === 0 ? <p className="empty-cart-msg">No se encontraron productos.</p> :
-      list.map(p => <ProductCard key={p.id} product={p} onOpenModal={setSelectedProduct} />)
-    }
+      {list.length === 0 ? <p className="empty-cart-msg">No se encontraron productos.</p> :
+        list.map(p => <ProductCard key={p.id} product={p} onOpenModal={setSelectedProduct} />)
+      }
     </div>
   );
 
   return (
     <>
-    {isLoading && <LoadingScreen />}
+      {isLoading && <LoadingScreen />}
 
-    <div className="page-container" style={{ visibility: isLoading ? 'hidden' : 'visible' }}>
-    <div className="toast-container">
-    {toasts.map(t => (
-      <Toast key={t.id} toast={t} onRemove={removeToast} />
-    ))}
-    </div>
+      <div className="page-container" style={{ visibility: isLoading ? 'hidden' : 'visible' }}>
+        <div className="toast-container">
+          {toasts.map(t => (
+            <Toast key={t.id} toast={t} onRemove={removeToast} />
+          ))}
+        </div>
 
-    <Navbar
-    cartCount={cart.reduce((a, b) => a + b.qty, 0)}
-    onSearch={handleSearch}
-    onOpenCart={() => setIsCartOpen(true)}
-    />
+        <Navbar
+          cartCount={cart.reduce((a, b) => a + b.qty, 0)}
+          onSearch={handleSearch}
+          onOpenCart={() => setIsCartOpen(true)}
+        />
 
-    <div className="main-carousel-wrapper">
-    <BannerCarousel />
-    </div>
+        <div className="main-carousel-wrapper">
+          <BannerCarousel />
+        </div>
 
-    <div className="ticker-wrapper">
-    <div className="ticker-text">
-    <span>Supermercados Panorama APP</span>
-    <span>Envío Gratis En Compras Superiores A $150.000 ✨</span>
-    <span>Descuentos Del 20% En Productos Seleccionados 🔥</span>
-    <span>Nuevos Productos Ya Disponibles 🚀</span>
-    </div>
-    </div>
+        <div className="ticker-wrapper">
+          <div className="ticker-text">
+            <span>Supermercados Panorama APP</span>
+            <span>Envío Gratis En Compras Superiores A $150.000 ✨</span>
+            <span>Descuentos Del 20% En Productos Seleccionados 🔥</span>
+            <span>Nuevos Productos Ya Disponibles 🚀</span>
+          </div>
+        </div>
 
-    <CategoryCarousel products={products} onSelectCategory={handleCategorySelect} />
+        <CategoryCarousel products={products} onSelectCategory={handleCategorySelect} />
 
-    <main className="menu-container">
-    {view === 'filtered' ? (
-      <section className="menu-section">
-      <h2 className="section-title">{searchTitle}</h2>
-      {renderProductGrid(filteredProducts)}
-      </section>
-    ) : (
-      <>
-      <section className="menu-section">
-      <h2 className="section-title">Productos Destacados</h2>
-      {renderProductGrid(shuffleArray(products.filter(p => p.featured)).slice(0, 25))}
-      </section>
+        <main className="menu-container">
+          {view === 'filtered' ? (
+            <section className="menu-section">
+              <h2 className="section-title">{searchTitle}</h2>
+              {renderProductGrid(filteredProducts)}
+            </section>
+          ) : (
+            <>
+              <section className="menu-section">
+                <h2 className="section-title">Productos Destacados</h2>
+                {renderProductGrid(shuffleArray(products.filter(p => p.featured)).slice(0, 25))}
+              </section>
 
-      <AdsSection onOpenProduct={handleOpenAdProduct} />
+              <AdsSection onOpenProduct={handleOpenAdProduct} />
 
-      <section className="menu-section">
-      <h2 className="section-title">Ofertas Exclusivas</h2>
-      {renderProductGrid(shuffleArray(products.filter(p => p.isOffer)).slice(0, 25))}
-      </section>
-      </>
-    )}
-    </main>
+              <section className="menu-section">
+                <h2 className="section-title">Ofertas Exclusivas</h2>
+                {renderProductGrid(shuffleArray(products.filter(p => p.isOffer)).slice(0, 25))}
+              </section>
+            </>
+          )}
+        </main>
 
-    <ProductModal
-    product={selectedProduct}
-    onClose={() => setSelectedProduct(null)}
-    onAddToCart={addToCart}
-    />
+        <ProductModal
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+          onAddToCart={addToCart}
+        />
 
-    <CartModal
-    isOpen={isCartOpen}
-    cart={cart}
-    onClose={() => setIsCartOpen(false)}
-    onUpdateQty={updateCartQty}
-    onCheckout={() => { if(cart.length === 0) return alert('El carrito está vacío'); setIsCheckoutOpen(true); }}
-    />
+        <CartModal
+          isOpen={isCartOpen}
+          cart={cart}
+          onClose={() => setIsCartOpen(false)}
+          onUpdateQty={updateCartQty}
+          onCheckout={() => { if(cart.length === 0) return alert('El carrito está vacío'); setIsCheckoutOpen(true); }}
+        />
 
-    <CheckoutModal
-    isOpen={isCheckoutOpen}
-    onClose={() => setIsCheckoutOpen(false)}
-    onFinalize={handleFinalizeOrder}
-    onBackToCart={() => setIsCartOpen(true)}
-    />
+        <CheckoutModal
+          isOpen={isCheckoutOpen}
+          onClose={() => setIsCheckoutOpen(false)}
+          onFinalize={handleFinalizeOrder}
+          onBackToCart={() => setIsCartOpen(true)}
+        />
 
-    <SuccessModal
-    orderDetails={orderDetails}
-    onClose={() => setOrderDetails(null)}
-    onWhatsApp={handleWhatsApp}
-    />
+        <SuccessModal
+          orderDetails={orderDetails}
+          onClose={() => setOrderDetails(null)}
+          onWhatsApp={handleWhatsApp}
+        />
 
-    <footer className="footer-menu">
-    <p>&copy; {new Date().getFullYear()} TECSIN Todos los derechos reservados - Supermercados Panorama</p>
-    </footer>
+        <footer className="footer-menu">
+          <p>&copy; {new Date().getFullYear()} TECSIN Todos los derechos reservados - Supermercados Panorama</p>
+        </footer>
 
-    <InstallBanner />
-    </div>
+        <InstallBanner />
+      </div>
     </>
   );
 }
