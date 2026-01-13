@@ -1,36 +1,43 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const InstallBanner = () => {
-    const [deferredPrompt, setDeferredPrompt] = useState(null);
-    const [visible, setVisible] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isVisible, setIsVisible] = useState(false);
 
-    useEffect(() => {
-        const handler = (e) => {
-            e.preventDefault();
-            setDeferredPrompt(e);
-            setVisible(true);
-        };
-        window.addEventListener('beforeinstallprompt', handler);
-        return () => window.removeEventListener('beforeinstallprompt', handler);
-    }, []);
+  useEffect(() => {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsVisible(true);
+    });
 
-    const handleInstall = async () => {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        await deferredPrompt.userChoice;
-        setDeferredPrompt(null);
-        setVisible(false);
-    };
+    window.addEventListener('appinstalled', () => {
+      setIsVisible(false);
+      setDeferredPrompt(null);
+    });
+  }, []);
 
-    return (
-        <div className={`install-banner ${visible ? 'visible' : ''}`} hidden={!visible}>
-        <span>Añadir a pantalla de inicio</span>
-        <div>
-        <button onClick={() => setVisible(false)}>No</button>
+  const handleInstall = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+      setIsVisible(false);
+    }
+  };
+
+  if (!isVisible) return null;
+
+  return (
+    <div className={`install-banner ${isVisible ? 'visible' : ''}`}>
+      <span>¿Quieres instalar la App de Panorama?</span>
+      <div>
+        <button onClick={() => setIsVisible(false)}>Ahora no</button>
         <button className="install-btn" onClick={handleInstall}>Instalar</button>
-        </div>
-        </div>
-    );
+      </div>
+    </div>
+  );
 };
 
 export default InstallBanner;

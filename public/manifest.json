@@ -1,0 +1,24 @@
+{
+  "short_name": "Panorama",
+  "name": "Supermercados Panorama",
+  "icons": [
+    {
+      "src": "assets/img/favicon.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/img/favicon.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#007c3d",
+  "background_color": "#ffffff",
+  "description": "Haz tus pedidos en Supermercados Panorama y recíbelos en casa.",
+  "orientation": "portrait"
+}
