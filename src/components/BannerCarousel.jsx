@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
 const images = [
-    'src/assets/img/baner/baner1.webp', 'src/assets/img/baner/baner2.webp', 'src/assets/img/baner/baner3.webp',
-'src/assets/img/baner/baner4.webp', 'src/assets/img/baner/baner5.webp', 'src/assets/img/baner/baner6.webp',
-'src/assets/img/baner/baner7.webp', 'src/assets/img/baner/baner8.webp', 'src/assets/img/baner/baner9.webp'
+    '/assets/img/baner/baner1.webp', '/assets/img/baner/baner2.webp', '/assets/img/baner/baner3.webp',
+'/assets/img/baner/baner4.webp', '/assets/img/baner/baner5.webp', '/assets/img/baner/baner6.webp',
+'/assets/img/baner/baner7.webp', '/assets/img/baner/baner8.webp', '/assets/img/baner/baner9.webp'
 ];
 
 const BannerCarousel = () => {

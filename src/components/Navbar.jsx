@@ -4,7 +4,7 @@ const Navbar = ({ cartCount, onSearch, onOpenCart }) => {
     return (
         <nav className="navbar">
         <div className="nav-left">
-        <img src="src/assets/img/favicon.png" alt="Logo" className="nav-logo-img" />
+        <img src="/assets/img/favicon.png" alt="Logo" className="nav-logo-img" />
         <h1 className="logo">Panorama</h1>
         </div>
 

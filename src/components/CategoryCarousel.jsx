@@ -13,7 +13,7 @@ const CategoryCarousel = ({ products, onSelectCategory }) => {
                 <div key={idx} className="category-item" onClick={() => onSelectCategory(cat === 'Todo' ? '__all' : cat)}>
                 <img
                 className="category-image"
-                src={`/src/assets/img/icons/${iconName}.webp`}
+                src={`/assets/img/icons/${iconName}.webp`}
                 alt={cat}
                 />
                 <span className="category-name">{cat}</span>
