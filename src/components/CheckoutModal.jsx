@@ -1,20 +1,18 @@
 import React, { useState } from 'react';
 
 const CheckoutModal = ({ isOpen, onClose, onFinalize, onBackToCart }) => {
-    const [activeTab, setActiveTab] = useState('simple'); // 'simple' o 'fiscal'
+    const [activeTab, setActiveTab] = useState('simple');
     
-    // Estado unificado
     const [formData, setFormData] = useState({
         name: '',
         address: '',
         payment: 'Efectivo',
         terms: false,
-        // Campos adicionales para Factus
         documentType: '13',
         documentNumber: '',
         email: '',
         phone: '',
-        isFiscal: false // Indicador para la base de datos
+        isFiscal: false
     });
 
     const handleChange = (e) => {
@@ -29,13 +27,12 @@ const CheckoutModal = ({ isOpen, onClose, onFinalize, onBackToCart }) => {
         if (!formData.terms) return alert('Debes aceptar los términos y condiciones.');
         if (!formData.name || !formData.address) return alert('Nombre y dirección son obligatorios.');
 
-        let legalOrgId = '2'; // Por defecto: 2 = Persona Natural
+        let legalOrgId = '2';
 
         if (activeTab === 'fiscal') {
             if (!formData.documentNumber || !formData.email || !formData.phone) {
                 return alert('Para factura electrónica, completa todos los datos fiscales.');
             }
-            // Lógica simple: Si es NIT (31), es Persona Jurídica (1). Si no, Natural (2).
             if (formData.documentType === '31') {
                 legalOrgId = '1'; 
             }
@@ -44,7 +41,7 @@ const CheckoutModal = ({ isOpen, onClose, onFinalize, onBackToCart }) => {
         onFinalize({ 
             ...formData, 
             is_fiscal: activeTab === 'fiscal',
-            legal_organization_id: legalOrgId // <--- Nuevo campo para Factus
+            legal_organization_id: legalOrgId
         });
     };
 
@@ -57,7 +54,6 @@ const CheckoutModal = ({ isOpen, onClose, onFinalize, onBackToCart }) => {
                 
                 <h2 style={{ color: 'var(--primary)', marginBottom: '15px' }}>Finalizar Pedido</h2>
 
-                {/* Contenedor de Pestañas */}
                 <div style={{ display: 'flex', marginBottom: '20px', borderBottom: '2px solid #eee' }}>
                     <button 
                         onClick={() => setActiveTab('simple')}
@@ -82,7 +78,6 @@ const CheckoutModal = ({ isOpen, onClose, onFinalize, onBackToCart }) => {
                 </div>
 
                 <div className="cart-items" style={{ flex: '1', paddingRight: '5px' }}>
-                    {/* Campos Comunes */}
                     <div className="form-group">
                         <label>Nombre Completo:</label>
                         <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Ej: Juan Pérez" />
@@ -93,7 +88,6 @@ const CheckoutModal = ({ isOpen, onClose, onFinalize, onBackToCart }) => {
                         <input type="text" name="address" value={formData.address} onChange={handleChange} placeholder="Calle, Barrio, Casa" />
                     </div>
 
-                    {/* Campos solo para Factura Electrónica */}
                     {activeTab === 'fiscal' && (
                         <div style={{ animation: 'slideDown 0.3s ease' }}>
                             <div style={{ display: 'flex', gap: '10px' }}>
@@ -136,7 +130,7 @@ const CheckoutModal = ({ isOpen, onClose, onFinalize, onBackToCart }) => {
 
                 <div style={{ marginTop: '20px' }}>
                     <button className="checkout-btn" onClick={handleSubmit}>Finalizar Compra</button>
-                    <button className="add-to-cart-btn" onClick={onBackToCart} style={{ background: '#eee', color: '#333' }}>Regresar al carrito</button>
+                    <button className="add-to-cart-btn" onClick={() => { onClose(); onBackToCart && onBackToCart(); }} style={{ background: '#eee', color: '#333' }}>Regresar al carrito</button>
                 </div>
             </div>
         </div>

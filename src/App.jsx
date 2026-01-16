@@ -130,29 +130,24 @@ function App() {
     }
   };
 
-  // --- MODIFICACIÓN PRINCIPAL PARA FACTUS ---
   const handleFinalizeOrder = async (details) => {
     const total = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
 
-    // Mapeamos los datos del Modal a las columnas SQL creadas
     const finalOrder = {
       created_at: new Date(),
-      status: 'pending',
-      items: cart, // Supabase guarda JSONB automáticamente
-      total_amount: total,
-      payment_method: details.payment,
-      
-      // Datos del Cliente
       customer_name: details.name,
-      address: details.address,
-      
-      // Datos Fiscales / Factus
+      customer_address: details.address,
+      payment_method: details.payment,
+      total_amount: total,
+      order_items: cart.map(i => ({ id: i.id, name: i.name, price: i.price, qty: i.qty })),
+      payment_status: 'Pendiente',
       is_fiscal: details.is_fiscal,
       document_type: details.documentType || null,
       document_number: details.documentNumber || null,
       email: details.email || null,
       phone: details.phone || null,
-      legal_org_id: details.legal_organization_id || null
+      legal_org_id: details.legal_organization_id || null,
+      api_message: null
     };
 
     try {
@@ -165,17 +160,15 @@ function App() {
 
       if (error) throw error;
 
-      // Actualizamos estado local para el SuccessModal
-      setOrderDetails(finalOrder);
+      setOrderDetails((data && data[0]) ? data[0] : finalOrder);
       
-      // Limpiamos UI
       setIsCheckoutOpen(false);
       setIsCartOpen(false);
-      setCart([]); // Vaciamos el carrito tras compra exitosa
+      setCart([]);
 
     } catch (error) {
       console.error("Error saving order:", error);
-      alert("Error al guardar el pedido: " + error.message);
+      alert("Error al guardar el pedido: " + (error.message || error));
     } finally {
       setIsLoading(false);
     }
@@ -186,7 +179,6 @@ function App() {
     setIsLoading(true);
 
     try {
-      // Intento opcional de notificar al backend (si existe)
       try {
         await fetch('/api/place-order', {
           method: 'POST',
@@ -202,17 +194,17 @@ function App() {
 
       const whatsappNumber = '573227671829';
       
-      // Construcción del mensaje usando los nuevos nombres de campos (customer_name, payment_method)
       let message = `Hola, mi nombre es ${orderDetails.customer_name}\n`;
-      message += `Dirección: ${orderDetails.address}\n`;
+      message += `Dirección: ${orderDetails.customer_address}\n`;
       message += `Método de pago: ${orderDetails.payment_method}\n`;
       
       if (orderDetails.is_fiscal) {
-         message += `📝 Solicitud de Factura Electrónica (CC/NIT: ${orderDetails.document_number})\n`;
+         message += `📝 Solicitud de Factura Electrónica (Tipo: ${orderDetails.document_type} - ${orderDetails.document_number})\n`;
       }
       
       message += `\nPedido:\n`;
-      orderDetails.items.forEach(item => {
+      const items = orderDetails.order_items || [];
+      items.forEach(item => {
         message += `- ${item.name} x${item.qty} = $${money(item.price * item.qty)}\n`;
       });
       message += `\nTotal: $${money(orderDetails.total_amount)}`;
@@ -223,7 +215,7 @@ function App() {
       await fetchProducts();
       setView('default');
     } catch (e) {
-      alert('Error: ' + e.message);
+      alert('Error: ' + (e.message || e));
     } finally {
       setIsLoading(false);
     }
@@ -317,7 +309,7 @@ function App() {
           isOpen={isCheckoutOpen}
           onClose={() => setIsCheckoutOpen(false)}
           onFinalize={handleFinalizeOrder}
-          onBackToCart={() => setIsCartOpen(true)}
+          onBackToCart={() => { setIsCheckoutOpen(false); setIsCartOpen(true); }}
         />
 
         <SuccessModal

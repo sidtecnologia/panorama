@@ -10,7 +10,7 @@ const SuccessModal = ({ orderDetails, onClose, onWhatsApp }) => {
         <div className="success-modal-card">
         <button className="modal-close" onClick={onClose}>&times;</button>
         <h2>¡Tu compra está casi lista!</h2>
-        <p><strong>Total:</strong> ${money(orderDetails.total)}</p>
+        <p><strong>Total:</strong> ${money(orderDetails.total_amount)}</p>
         <p>Luego de confirmar el pago enviaremos tu pedido.</p>
         <button className="checkout-btn" onClick={onWhatsApp}><i className="fab fa-whatsapp"></i> Confirmar pago</button>
         <button className="add-to-cart-btn" style={{ background: '#666' }} onClick={onClose}>Regresar</button>
