@@ -130,12 +130,55 @@ function App() {
     }
   };
 
-  const handleFinalizeOrder = (details) => {
+  // --- MODIFICACIÓN PRINCIPAL PARA FACTUS ---
+  const handleFinalizeOrder = async (details) => {
     const total = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
-    const finalOrder = { ...details, items: [...cart], total };
-    setOrderDetails(finalOrder);
-    setIsCheckoutOpen(false);
-    setIsCartOpen(false);
+
+    // Mapeamos los datos del Modal a las columnas SQL creadas
+    const finalOrder = {
+      created_at: new Date(),
+      status: 'pending',
+      items: cart, // Supabase guarda JSONB automáticamente
+      total_amount: total,
+      payment_method: details.payment,
+      
+      // Datos del Cliente
+      customer_name: details.name,
+      address: details.address,
+      
+      // Datos Fiscales / Factus
+      is_fiscal: details.is_fiscal,
+      document_type: details.documentType || null,
+      document_number: details.documentNumber || null,
+      email: details.email || null,
+      phone: details.phone || null,
+      legal_org_id: details.legal_organization_id || null
+    };
+
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase
+        .from('orders')
+        .insert([finalOrder])
+        .select();
+
+      if (error) throw error;
+
+      // Actualizamos estado local para el SuccessModal
+      setOrderDetails(finalOrder);
+      
+      // Limpiamos UI
+      setIsCheckoutOpen(false);
+      setIsCartOpen(false);
+      setCart([]); // Vaciamos el carrito tras compra exitosa
+
+    } catch (error) {
+      console.error("Error saving order:", error);
+      alert("Error al guardar el pedido: " + error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleWhatsApp = async () => {
@@ -143,38 +186,39 @@ function App() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/place-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orderDetails: orderDetails,
-          products: products
-        }),
-      });
-
-      const text = await response.text();
-      let result = null;
+      // Intento opcional de notificar al backend (si existe)
       try {
-        result = text ? JSON.parse(text) : null;
+        await fetch('/api/place-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderDetails: orderDetails,
+            products: products
+          }),
+        });
       } catch (err) {
-        result = null;
-      }
-
-      if (!response.ok) {
-        const errMsg = result && result.error ? result.error : `HTTP ${response.status}`;
-        throw new Error(errMsg);
+        console.log("Backend notification skipped or failed", err);
       }
 
       const whatsappNumber = '573227671829';
-      let message = `Hola mi nombre es ${orderDetails.name}\nDirección: ${orderDetails.address}\nMétodo de pago: ${orderDetails.payment}\n\n`;
+      
+      // Construcción del mensaje usando los nuevos nombres de campos (customer_name, payment_method)
+      let message = `Hola, mi nombre es ${orderDetails.customer_name}\n`;
+      message += `Dirección: ${orderDetails.address}\n`;
+      message += `Método de pago: ${orderDetails.payment_method}\n`;
+      
+      if (orderDetails.is_fiscal) {
+         message += `📝 Solicitud de Factura Electrónica (CC/NIT: ${orderDetails.document_number})\n`;
+      }
+      
+      message += `\nPedido:\n`;
       orderDetails.items.forEach(item => {
         message += `- ${item.name} x${item.qty} = $${money(item.price * item.qty)}\n`;
       });
-      message += `\nTotal: $${money(orderDetails.total)}`;
+      message += `\nTotal: $${money(orderDetails.total_amount)}`;
 
       window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, '_blank');
 
-      setCart([]);
       setOrderDetails(null);
       await fetchProducts();
       setView('default');

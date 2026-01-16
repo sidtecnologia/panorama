@@ -1,9 +1,10 @@
-const CACHE_NAME = 'V1.6';
+const CACHE_NAME = 'V1.7';
 const ASSETS = [
     '/',
 '/index.html',
 '/manifest.json',
-'/assets/img/favicon.png'
+'/assets/img/favicon.png',
+'/sw.json'
 ];
 
 self.addEventListener('install', (event) => {
