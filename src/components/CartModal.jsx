@@ -26,11 +26,21 @@ const CartModal = ({ isOpen, cart, products = [], onClose, onUpdateQty, onChecko
     const [isDragging, setIsDragging] = useState(false);
 
     const onPointerDown = (e) => {
+        // If the pointerdown originated on an interactive control, do not start drag
+        const target = e.target;
+        if (target && target.closest && (target.closest('button') || target.closest('a') || target.closest('input') || target.closest('select'))) {
+            return;
+        }
+
         isDownRef.current = true;
         setIsDragging(true);
         startXRef.current = e.clientX || (e.touches && e.touches[0].clientX) || 0;
         scrollLeftRef.current = scrollRef.current ? scrollRef.current.scrollLeft : 0;
-        if (scrollRef.current && e.pointerId != null) scrollRef.current.setPointerCapture(e.pointerId);
+        if (scrollRef.current && e.pointerId != null) {
+            try {
+                scrollRef.current.setPointerCapture(e.pointerId);
+            } catch (err) {}
+        }
     };
 
     const onPointerMove = (e) => {
