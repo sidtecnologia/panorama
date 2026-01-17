@@ -131,14 +131,13 @@ function App() {
   };
 
   const handleFinalizeOrder = async (details) => {
-    const total = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
+    const subtotalIncluded = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
 
     const finalOrder = {
-      created_at: new Date(),
       customer_name: details.name,
       customer_address: details.address,
       payment_method: details.payment,
-      total_amount: total,
+      total_amount: subtotalIncluded,
       order_items: cart.map(i => ({ id: i.id, name: i.name, price: i.price, qty: i.qty })),
       payment_status: 'Pendiente',
       is_fiscal: details.is_fiscal,
@@ -152,7 +151,6 @@ function App() {
 
     try {
       setIsLoading(true);
-      
       const { data, error } = await supabase
         .from('orders')
         .insert([finalOrder])
@@ -160,12 +158,35 @@ function App() {
 
       if (error) throw error;
 
-      setOrderDetails((data && data[0]) ? data[0] : finalOrder);
-      
+      const savedOrder = (data && data[0]) ? data[0] : null;
+      setOrderDetails(savedOrder || finalOrder);
       setIsCheckoutOpen(false);
       setIsCartOpen(false);
       setCart([]);
 
+      if (savedOrder) {
+        try {
+          const res = await fetch('/api/factus-create-invoice', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order: { ...finalOrder, id: savedOrder.id } })
+          });
+          const json = await res.json();
+          const updatePayload = {};
+          if (json?.success) {
+            updatePayload.factus_id = json.result?.id || null;
+            updatePayload.invoice_url = json.result?.invoice_url || null;
+            updatePayload.bill_number = json.result?.bill_number || null;
+            updatePayload.cufe = json.result?.cufe || null;
+            updatePayload.qr_url = json.result?.qr_url || null;
+            updatePayload.api_message = JSON.stringify(json.result || json);
+            updatePayload.payment_status = json.result?.status ? 'Confirmado' : 'Pendiente';
+          } else {
+            updatePayload.api_message = JSON.stringify(json || { error: 'factus_failed' });
+          }
+          await supabase.from('orders').update(updatePayload).eq('id', savedOrder.id);
+        } catch (err) {}
+      }
     } catch (error) {
       console.error("Error saving order:", error);
       alert("Error al guardar el pedido: " + (error.message || error));
@@ -204,10 +225,16 @@ function App() {
       
       message += `\nPedido:\n`;
       const items = orderDetails.order_items || [];
+      let computedSubtotal = 0;
       items.forEach(item => {
+        computedSubtotal += item.price * item.qty;
         message += `- ${item.name} x${item.qty} = $${money(item.price * item.qty)}\n`;
       });
-      message += `\nTotal: $${money(orderDetails.total_amount)}`;
+      const computedBase = Math.round(computedSubtotal / 1.19);
+      const computedTax = computedSubtotal - computedBase;
+      message += `\nSubtotal (sin IVA): $${money(computedBase)}\n`;
+      message += `IVA 19%: $${money(computedTax)}\n`;
+      message += `Total: $${money(orderDetails.total_amount)}`;
 
       window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, '_blank');
 
@@ -307,6 +334,7 @@ function App() {
 
         <CheckoutModal
           isOpen={isCheckoutOpen}
+          cart={cart}
           onClose={() => setIsCheckoutOpen(false)}
           onFinalize={handleFinalizeOrder}
           onBackToCart={() => { setIsCheckoutOpen(false); setIsCartOpen(true); }}

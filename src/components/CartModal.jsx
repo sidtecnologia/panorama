@@ -1,8 +1,11 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { money, shuffleArray } from '../utils/helpers';
+import { money, shuffleArray, calcTaxIncluded, calcBaseFromIncluded } from '../utils/helpers';
 
 const CartModal = ({ isOpen, cart, products = [], onClose, onUpdateQty, onCheckout, onAddToCart }) => {
-    const total = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
+    const subtotalIncluded = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
+    const base = calcBaseFromIncluded(subtotalIncluded);
+    const tax = subtotalIncluded - base;
+    const total = subtotalIncluded;
 
     const recommendations = useMemo(() => {
         const cartIds = new Set(cart.map(i => i.id));
@@ -26,12 +29,10 @@ const CartModal = ({ isOpen, cart, products = [], onClose, onUpdateQty, onChecko
     const [isDragging, setIsDragging] = useState(false);
 
     const onPointerDown = (e) => {
-        // If the pointerdown originated on an interactive control, do not start drag
         const target = e.target;
         if (target && target.closest && (target.closest('button') || target.closest('a') || target.closest('input') || target.closest('select'))) {
             return;
         }
-
         isDownRef.current = true;
         setIsDragging(true);
         startXRef.current = e.clientX || (e.touches && e.touches[0].clientX) || 0;
@@ -99,9 +100,19 @@ const CartModal = ({ isOpen, cart, products = [], onClose, onUpdateQty, onChecko
                 <div style={{ borderTop: '1px solid #eee', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px', marginTop: 'auto' }}>
                     {cart.length > 0 && (
                         <>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '1.05rem' }}>
-                                <strong>Total:</strong>
-                                <strong style={{ color: 'var(--primary)' }}>${money(total)}</strong>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '6px', fontSize: '1.05rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <span>Subtotal (sin IVA)</span>
+                                    <strong>${money(base)}</strong>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <span>IVA (19%)</span>
+                                    <strong>${money(tax)}</strong>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.1rem' }}>
+                                    <strong>Total (con IVA)</strong>
+                                    <strong style={{ color: 'var(--primary)' }}>${money(total)}</strong>
+                                </div>
                             </div>
                             <button className="checkout-btn" onClick={handleCheckout} style={{ width: '100%', marginBottom: '10px' }}>
                                 Hacer Pedido

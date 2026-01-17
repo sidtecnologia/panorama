@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import { calcBaseFromIncluded, money } from '../utils/helpers';
 
-const CheckoutModal = ({ isOpen, onClose, onFinalize, onBackToCart }) => {
+const CheckoutModal = ({ isOpen, onClose, onFinalize, onBackToCart, cart = [] }) => {
     const [activeTab, setActiveTab] = useState('simple');
-    
+    const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         address: '',
@@ -11,8 +12,7 @@ const CheckoutModal = ({ isOpen, onClose, onFinalize, onBackToCart }) => {
         documentType: '13',
         documentNumber: '',
         email: '',
-        phone: '',
-        isFiscal: false
+        phone: ''
     });
 
     const handleChange = (e) => {
@@ -23,35 +23,43 @@ const CheckoutModal = ({ isOpen, onClose, onFinalize, onBackToCart }) => {
         }));
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!formData.terms) return alert('Debes aceptar los términos y condiciones.');
         if (!formData.name || !formData.address) return alert('Nombre y dirección son obligatorios.');
-
-        let legalOrgId = '2';
 
         if (activeTab === 'fiscal') {
             if (!formData.documentNumber || !formData.email || !formData.phone) {
                 return alert('Para factura electrónica, completa todos los datos fiscales.');
             }
-            if (formData.documentType === '31') {
-                legalOrgId = '1'; 
-            }
         }
 
-        onFinalize({ 
-            ...formData, 
-            is_fiscal: activeTab === 'fiscal',
-            legal_organization_id: legalOrgId
-        });
+        try {
+            setLoading(true);
+            const legalOrgId = activeTab === 'fiscal' ? (formData.documentType === '31' ? '1' : '2') : null;
+            onFinalize({
+                ...formData,
+                is_fiscal: activeTab === 'fiscal',
+                legal_organization_id: legalOrgId
+            });
+        } catch (err) {
+            alert(err.message || 'Error al procesar el pedido.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     if (!isOpen) return null;
+
+    const subtotalIncluded = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
+    const base = calcBaseFromIncluded(subtotalIncluded);
+    const tax = subtotalIncluded - base;
+    const total = subtotalIncluded;
 
     return (
         <div className={`checkout-modal-overlay active`} onClick={(e) => e.target === e.currentTarget && onClose()}>
             <div className="checkout-modal-card">
                 <button className="modal-close" onClick={onClose}>&times;</button>
-                
+
                 <h2 style={{ color: 'var(--primary)', marginBottom: '15px' }}>Finalizar Pedido</h2>
 
                 <div style={{ display: 'flex', marginBottom: '20px', borderBottom: '2px solid #eee' }}>
@@ -63,7 +71,7 @@ const CheckoutModal = ({ isOpen, onClose, onFinalize, onBackToCart }) => {
                             fontWeight: activeTab === 'simple' ? '700' : '400', cursor: 'pointer'
                         }}
                     >
-                        Entrega Rápida
+                        Pedido sin Factura
                     </button>
                     <button 
                         onClick={() => setActiveTab('fiscal')}
@@ -100,7 +108,7 @@ const CheckoutModal = ({ isOpen, onClose, onFinalize, onBackToCart }) => {
                                 </div>
                                 <div className="form-group" style={{ flex: 2 }}>
                                     <label>Documento:</label>
-                                    <input type="number" name="documentNumber" value={formData.documentNumber} onChange={handleChange} />
+                                    <input type="text" name="documentNumber" value={formData.documentNumber} onChange={handleChange} />
                                 </div>
                             </div>
                             <div className="form-group">
@@ -129,7 +137,21 @@ const CheckoutModal = ({ isOpen, onClose, onFinalize, onBackToCart }) => {
                 </div>
 
                 <div style={{ marginTop: '20px' }}>
-                    <button className="checkout-btn" onClick={handleSubmit}>Finalizar Compra</button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span>Subtotal (sin IVA)</span>
+                            <strong>${money(base)}</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span>IVA (19%)</span>
+                            <strong>${money(tax)}</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <strong>Total (con IVA)</strong>
+                            <strong style={{ color: 'var(--primary)' }}>${money(total)}</strong>
+                        </div>
+                    </div>
+                    <button className="checkout-btn" onClick={handleSubmit} disabled={loading}>{loading ? 'Procesando...' : 'Finalizar Compra'}</button>
                     <button className="add-to-cart-btn" onClick={() => { onClose(); onBackToCart && onBackToCart(); }} style={{ background: '#eee', color: '#333' }}>Regresar al carrito</button>
                 </div>
             </div>
