@@ -1,11 +1,10 @@
-const CACHE_NAME = 'panorama-v2.1';
+const CACHE_NAME = 'panorama-v2.2';
 const ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/assets/img/favicon.png',
-  '/assets/img/icons/icon-192x192.png',
-  '/assets/img/icons/icon-512x512.png'
+  '/sw.json'
 ];
 
 self.addEventListener('install', (event) => {
@@ -17,15 +16,13 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil((async () => {
-    const keys = await caches.keys();
-    await Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)));
-    await self.clients.claim();
-    const allClients = await self.clients.matchAll({ type: 'window' });
-    for (const client of allClients) {
-      client.postMessage({ type: 'NEW_VERSION_AVAILABLE' });
-    }
-  })());
+  event.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+      );
+    }).then(() => self.clients.claim())
+  );
 });
 
 self.addEventListener('fetch', (event) => {
