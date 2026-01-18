@@ -18,7 +18,7 @@ const SuccessModal = ({ orderDetails, onClose, onWhatsApp }) => {
         <h2>¡Tu compra está casi lista!</h2>
         <p><strong>Subtotal (sin IVA):</strong> ${money(base)}</p>
         <p><strong>IVA 19%:</strong> ${money(tax)}</p>
-        <p><strong>Total (con IVA):</strong> ${money(total)}</p>
+        <p><strong>Total:</strong> ${money(total)}</p>
         <p>Luego de confirmar el pago enviaremos tu pedido.</p>
         <button className="checkout-btn" onClick={onWhatsApp}><i className="fab fa-whatsapp"></i> Confirmar pago</button>
         <button className="add-to-cart-btn" style={{ background: '#666' }} onClick={onClose}>Regresar</button>

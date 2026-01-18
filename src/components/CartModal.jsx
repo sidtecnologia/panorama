@@ -110,7 +110,7 @@ const CartModal = ({ isOpen, cart, products = [], onClose, onUpdateQty, onChecko
                                     <strong>${money(tax)}</strong>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.1rem' }}>
-                                    <strong>Total (con IVA)</strong>
+                                    <strong>Total</strong>
                                     <strong style={{ color: 'var(--primary)' }}>${money(total)}</strong>
                                 </div>
                             </div>

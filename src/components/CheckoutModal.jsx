@@ -147,7 +147,7 @@ const CheckoutModal = ({ isOpen, onClose, onFinalize, onBackToCart, cart = [] })
                             <strong>${money(tax)}</strong>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <strong>Total (con IVA)</strong>
+                            <strong>Total</strong>
                             <strong style={{ color: 'var(--primary)' }}>${money(total)}</strong>
                         </div>
                     </div>
