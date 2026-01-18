@@ -1,4 +1,4 @@
-const CACHE_NAME = 'panorama-v2.2';
+const CACHE_NAME = 'panorama-v2.2.0';
 const ASSETS = [
   '/',
   '/index.html',
